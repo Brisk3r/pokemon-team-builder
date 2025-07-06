@@ -59,6 +59,11 @@
         .toast {
             transition: opacity 0.3s, transform 0.3s;
         }
+        /* Styles for the mobile tab navigation */
+        .mobile-tab.active {
+            background-color: #fbbF24; /* yellow-400 */
+            color: #161b22;
+        }
     </style>
 </head>
 
@@ -71,7 +76,7 @@
     </div>
 
     <!-- Toast Notification -->
-    <div id="toast" class="fixed bottom-5 right-5 bg-green-500 text-white py-2 px-4 rounded-lg shadow-lg opacity-0 transform translate-y-2 toast">
+    <div id="toast" class="fixed bottom-20 right-5 bg-green-500 text-white py-2 px-4 rounded-lg shadow-lg opacity-0 transform translate-y-2 toast z-40">
         <p id="toast-message"></p>
     </div>
 
@@ -91,9 +96,10 @@
         </section>
 
         <!-- Main Content Grid -->
-        <main class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <main id="main-content" class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <!-- This container holds the three main sections for mobile view -->
             <div class="lg:col-span-8">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                 <div id="builder-view" class="view-panel">
                     <div id="pokemon-list-container" class="p-4 border-4 border-gray-700 rounded-lg bg-[#161b22]">
                         <h3 class="text-xl mb-4 text-center">Choose Pokémon (Hoenn Dex)</h3>
                         <div class="flex flex-col sm:flex-row gap-2 mb-4">
@@ -104,8 +110,10 @@
                         </div>
                         <div id="pokemon-list" class="grid grid-cols-2 sm:grid-cols-3 gap-4 max-h-[600px] overflow-y-auto p-2"></div>
                     </div>
-                    <div id="details-section" class="p-4 border-4 border-gray-700 rounded-lg bg-[#161b22] sticky top-8">
-                        <div id="details-placeholder" class="flex flex-col items-center justify-center h-full text-gray-500">
+                </div>
+                 <div id="details-view" class="view-panel hidden lg:block">
+                    <div id="details-section" class="p-4 border-4 border-gray-700 rounded-lg bg-[#161b22] lg:sticky top-8">
+                        <div id="details-placeholder" class="flex flex-col items-center justify-center h-full text-gray-500 min-h-[400px]">
                             <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/ultra-ball.png" class="w-24 h-24 opacity-50 image-rendering-pixelated" alt="Ultra Ball">
                             <p class="mt-4 text-center">Select a Pokémon from your team to see its details</p>
                         </div>
@@ -113,12 +121,21 @@
                     </div>
                 </div>
             </div>
-            <div class="lg:col-span-4 p-4 border-4 border-gray-700 rounded-lg bg-[#161b22] sticky top-8">
-                <h3 class="text-xl mb-4 text-center">Battle Analysis</h3>
-                <div id="team-analysis-content" class="space-y-4"></div>
+            <div id="analysis-view" class="view-panel hidden lg:block lg:col-span-4">
+                <div id="analysis-section" class="p-4 border-4 border-gray-700 rounded-lg bg-[#161b22] lg:sticky top-8">
+                    <h3 class="text-xl mb-4 text-center">Battle Analysis</h3>
+                    <div id="team-analysis-content" class="space-y-4"></div>
+                </div>
             </div>
         </main>
     </div>
+
+    <!-- Mobile Tab Navigation -->
+    <nav id="mobile-nav" class="lg:hidden fixed bottom-0 left-0 right-0 bg-[#161b22] border-t-2 border-yellow-400 flex justify-around p-2 z-30">
+        <button data-view="builder-view" class="mobile-tab flex-1 p-2 rounded-md text-sm">Builder</button>
+        <button data-view="details-view" class="mobile-tab flex-1 p-2 rounded-md text-sm">Details</button>
+        <button data-view="analysis-view" class="mobile-tab flex-1 p-2 rounded-md text-sm">Analysis</button>
+    </nav>
 
     <!-- Move Selection Modal -->
     <div id="move-modal" class="fixed inset-0 z-40 overflow-y-auto hidden">
@@ -145,7 +162,7 @@
             const GEN3_SPECIAL_TYPES = ['fire', 'water', 'grass', 'electric', 'ice', 'psychic', 'dragon', 'dark'];
             
             // --- DOM ELEMENTS ---
-            const loadingOverlay = document.getElementById('loading-overlay'), loadingProgress = document.getElementById('loading-progress'), teamContainer = document.getElementById('team-container'), pokemonList = document.getElementById('pokemon-list'), searchInput = document.getElementById('search-pokemon'), typeFilter = document.getElementById('type-filter'), detailsPlaceholder = document.getElementById('details-placeholder'), detailsContent = document.getElementById('details-content'), teamAnalysisContent = document.getElementById('team-analysis-content'), moveModal = document.getElementById('move-modal'), modalBackdrop = document.getElementById('modal-backdrop'), modalPanel = document.getElementById('modal-panel'), modalContent = document.getElementById('modal-content'), closeModalBtn = document.getElementById('close-modal-btn'), clearTeamBtn = document.getElementById('clear-team-btn'), toast = document.getElementById('toast'), toastMessage = document.getElementById('toast-message');
+            const loadingOverlay = document.getElementById('loading-overlay'), loadingProgress = document.getElementById('loading-progress'), teamContainer = document.getElementById('team-container'), pokemonList = document.getElementById('pokemon-list'), searchInput = document.getElementById('search-pokemon'), typeFilter = document.getElementById('type-filter'), detailsPlaceholder = document.getElementById('details-placeholder'), detailsContent = document.getElementById('details-content'), teamAnalysisContent = document.getElementById('team-analysis-content'), moveModal = document.getElementById('move-modal'), modalBackdrop = document.getElementById('modal-backdrop'), modalPanel = document.getElementById('modal-panel'), modalContent = document.getElementById('modal-content'), closeModalBtn = document.getElementById('close-modal-btn'), clearTeamBtn = document.getElementById('clear-team-btn'), toast = document.getElementById('toast'), toastMessage = document.getElementById('toast-message'), mobileNav = document.getElementById('mobile-nav');
 
             // --- DATA FETCHING & INITIALIZATION ---
             async function fetchGameData() {
@@ -215,6 +232,7 @@
                 loadTeamFromStorage();
                 renderPokemonList();
                 renderTeam();
+                setupMobileTabs();
                 loadingOverlay.style.display = 'none';
             }
 
@@ -256,11 +274,22 @@
                         const itemSprite = pokemon.heldItem && pokemon.heldItem !== 'none' ? `<img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/${pokemon.heldItem}.png" class="absolute bottom-1 left-1 w-6 h-6 image-rendering-pixelated" alt="${pokemon.heldItem}" onerror="this.style.display='none'"/>` : '';
                         slot.innerHTML = `<img src="${pokemon.sprite}" alt="${pokemon.name}" class="w-20 h-20 image-rendering-pixelated mb-2"><p class="text-md capitalize text-center">${pokemon.nickname}</p><button class="remove-btn absolute top-1 right-1 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold opacity-50 hover:opacity-100 transition-opacity">×</button>${itemSprite}`;
                         slot.querySelector('.remove-btn').addEventListener('click', (e) => { e.stopPropagation(); removePokemonFromTeam(index); });
-                        slot.addEventListener('click', () => displayPokemonDetails(pokemon, index));
+                        slot.addEventListener('click', () => {
+                            displayPokemonDetails(pokemon, index);
+                            // On mobile, switch to the details view
+                            if (window.innerWidth < 1024) {
+                                switchView('details-view');
+                            }
+                        });
                     } else {
                         slot.classList.add('empty');
                         slot.innerHTML = `<span class="text-4xl text-gray-600">+</span>`;
-                        slot.addEventListener('click', () => document.getElementById('pokemon-list-container').scrollIntoView({ behavior: 'smooth' }));
+                        slot.addEventListener('click', () => {
+                             if (window.innerWidth < 1024) {
+                                switchView('builder-view');
+                            }
+                            document.getElementById('pokemon-list-container').scrollIntoView({ behavior: 'smooth' });
+                        });
                     }
                     teamContainer.appendChild(slot);
                 });
@@ -361,6 +390,9 @@
                     renderTeam();
                     displayPokemonDetails(team[emptySlotIndex], emptySlotIndex);
                     showToast(`${pokemon.name.charAt(0).toUpperCase() + pokemon.name.slice(1)} added to team!`);
+                    if (window.innerWidth < 1024) {
+                        switchView('details-view');
+                    }
                 } else {
                     showToast("Your team is full!", 'error');
                 }
@@ -435,7 +467,6 @@
                 const savedTeam = localStorage.getItem('pokemonEmeraldTeam');
                 if (savedTeam) {
                     const parsedTeam = JSON.parse(savedTeam);
-                    // Add backward compatibility for teams saved before new properties were added
                     team = parsedTeam.map(p => {
                         if (p) {
                             return {
@@ -443,7 +474,7 @@
                                 nature: 'Hardy',
                                 selectedAbility: p.abilities ? p.abilities[0] : null,
                                 nickname: p.name,
-                                ...p, // Overwrite defaults with saved data
+                                ...p,
                             };
                         }
                         return p;
@@ -454,19 +485,41 @@
             // --- UI HELPERS ---
             function showToast(message, type = 'success') {
                 toastMessage.textContent = message;
-                toast.className = `fixed bottom-5 right-5 text-white py-2 px-4 rounded-lg shadow-lg opacity-0 transform translate-y-2 toast ${type === 'success' ? 'bg-green-500' : 'bg-red-500'}`;
+                toast.className = `fixed bottom-20 right-5 text-white py-2 px-4 rounded-lg shadow-lg opacity-0 transform translate-y-2 toast z-40 ${type === 'success' ? 'bg-green-500' : 'bg-red-500'}`;
                 
-                // Animate in
                 setTimeout(() => {
                     toast.classList.remove('opacity-0', 'translate-y-2');
                     toast.classList.add('opacity-100', 'translate-y-0');
                 }, 10);
 
-                // Animate out
                 setTimeout(() => {
                     toast.classList.remove('opacity-100', 'translate-y-0');
                     toast.classList.add('opacity-0', 'translate-y-2');
                 }, 3000);
+            }
+
+            function switchView(viewId) {
+                document.querySelectorAll('.view-panel').forEach(panel => {
+                    panel.classList.add('hidden');
+                    panel.classList.remove('lg:block'); // Ensure lg:block is removed to hide it on mobile
+                });
+                document.getElementById(viewId).classList.remove('hidden');
+
+                document.querySelectorAll('.mobile-tab').forEach(tab => {
+                    tab.classList.remove('active');
+                });
+                document.querySelector(`.mobile-tab[data-view="${viewId}"]`).classList.add('active');
+            }
+
+            function setupMobileTabs() {
+                const tabs = document.querySelectorAll('.mobile-tab');
+                tabs.forEach(tab => {
+                    tab.addEventListener('click', () => {
+                        switchView(tab.dataset.view);
+                    });
+                });
+                // Set initial active tab
+                switchView('builder-view');
             }
 
             // --- EVENT LISTENERS ---

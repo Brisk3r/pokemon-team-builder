@@ -281,6 +281,7 @@
 
                     const [encountersData, evolutionData] = await Promise.all([encounterPromise, evolutionPromise]);
 
+                    // BUG FIX: Correctly filter locations for Emerald version
                     const locations = [];
                     encountersData.forEach(encounter => {
                         const hasEmeraldEncounter = encounter.version_details.some(detail => detail.version.name === 'emerald');
@@ -290,36 +291,38 @@
                         }
                     });
 
-                    const parseEvolutionChain = (chain) => {
-                        const evolutions = [];
-                        const speciesName = chain.species.name;
-                        const speciesId = chain.species.url.split('/').slice(-2, -1)[0];
+                    // BUG FIX: Robustly parse the entire evolution tree, including branches
+                    const parseEvolutionChain = (chainNode) => {
+                        const chain = [];
+                        const speciesName = chainNode.species.name;
+                        const speciesId = chainNode.species.url.split('/').slice(-2, -1)[0];
                         
-                        let method = '';
-                        if (chain.evolution_details.length > 0) {
-                             const evoDetails = chain.evolution_details[0];
+                        let method = "Base";
+                        if (chainNode.evolution_details.length > 0) {
+                             const evoDetails = chainNode.evolution_details[0];
                              switch(evoDetails.trigger.name) {
                                 case 'level-up':
-                                    method = `Level ${evoDetails.min_level}`;
+                                    method = evoDetails.min_level ? `Level ${evoDetails.min_level}` : 'Level Up';
                                     break;
                                 case 'trade':
                                     method = 'Trade';
                                     break;
                                 case 'use-item':
-                                    method = `Use ${evoDetails.item.name.replace('-', ' ')}`;
+                                    method = `Use ${evoDetails.item.name.replace(/-/g, ' ')}`;
                                     break;
                                 default:
-                                    method = evoDetails.trigger.name.replace('-', ' ');
+                                    method = evoDetails.trigger.name.replace(/-/g, ' ');
                             }
                         }
-                        evolutions.push({ name: speciesName, id: speciesId, method: method });
+                        
+                        chain.push({ name: speciesName, id: speciesId, method: method });
 
-                        if (chain.evolves_to.length > 0) {
-                            chain.evolves_to.forEach(evo => {
-                                evolutions.push(...parseEvolutionChain(evo));
+                        if (chainNode.evolves_to.length > 0) {
+                            chainNode.evolves_to.forEach(evo => {
+                                chain.push(...parseEvolutionChain(evo));
                             });
                         }
-                        return evolutions;
+                        return chain;
                     };
                     
                     const evolutionChain = parseEvolutionChain(evolutionData.chain);
@@ -468,12 +471,13 @@
                         } else if (extraData.isLegendary || extraData.isMythical) {
                             locationsContainer.textContent = 'Acquired at a unique location.';
                         } else {
-                            locationsContainer.textContent = 'Only available as a starter or gift.';
+                            locationsContainer.textContent = 'Only available as a starter, gift, or special event.';
                         }
                     }
                 }
                 const evolutionContainer = document.getElementById('evolution-container');
                 if (evolutionContainer) {
+                    // BUG FIX: Correctly check for evolution chain length
                     if (extraData.evolutionChain.length > 1) {
                         let evoHTML = '<strong>Evolutions:</strong><div class="flex items-center justify-center gap-1 mt-1 flex-wrap">';
                         const fullChain = extraData.evolutionChain;
@@ -482,11 +486,11 @@
                             const spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${evo.id}.png`;
                             evoHTML += `<div class="text-center"><img src="${spriteUrl}" class="w-16 h-16 image-rendering-pixelated" alt="${evo.name}"><p class="text-xs capitalize">${evo.name}</p></div>`;
                             
-                            // Find the next evolution that comes from this one
-                            const nextEvo = fullChain.find(next => next.method && allPokemonData.find(p => p.name === next.name)?.evolvesFrom === evo.name);
-
-                            if (i < fullChain.length - 1 && fullChain[i+1].method) {
-                                evoHTML += `<div class="text-center evolution-arrow mx-2"><p>&rarr;</p><p class="text-xs capitalize">${fullChain[i+1].method.toLowerCase()}</p></div>`;
+                            if (i < fullChain.length - 1) {
+                                const nextEvo = fullChain[i+1];
+                                if (nextEvo.method !== 'Base') {
+                                    evoHTML += `<div class="text-center evolution-arrow mx-2"><p>&rarr;</p><p class="text-xs capitalize">${nextEvo.method.toLowerCase()}</p></div>`;
+                                }
                             }
                         }
                         evoHTML += '</div>';

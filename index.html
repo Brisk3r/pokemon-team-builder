@@ -63,7 +63,6 @@
             background-color: #fbbF24; /* yellow-400 */
             color: #161b22;
         }
-        /* Styles for the move list accordion */
         details > summary {
             cursor: pointer;
             padding: 0.5rem;
@@ -167,6 +166,7 @@
             const allPokemonData = [];
             const moveDataCache = new Map();
             const abilityDataCache = new Map();
+            const extraDataCache = new Map();
             let team = Array(6).fill(null);
             const TYPE_CHART = { normal: { weak: ['fighting'], resist: [], immune: ['ghost'] }, fire: { weak: ['water', 'ground', 'rock'], resist: ['fire', 'grass', 'ice', 'bug', 'steel'], immune: [] }, water: { weak: ['electric', 'grass'], resist: ['fire', 'water', 'ice', 'steel'], immune: [] }, electric: { weak: ['ground'], resist: ['electric', 'flying', 'steel'], immune: [] }, grass: { weak: ['fire', 'ice', 'poison', 'flying', 'bug'], resist: ['water', 'electric', 'grass', 'ground'], immune: [] }, ice: { weak: ['fire', 'fighting', 'rock', 'steel'], resist: ['ice'], immune: [] }, fighting: { weak: ['flying', 'psychic'], resist: ['bug', 'rock', 'dark'], immune: [] }, poison: { weak: ['ground', 'psychic'], resist: ['grass', 'fighting', 'poison', 'bug'], immune: [] }, ground: { weak: ['water', 'grass', 'ice'], resist: ['poison', 'rock'], immune: ['electric'] }, flying: { weak: ['electric', 'ice', 'rock'], resist: ['grass', 'fighting', 'bug'], immune: ['ground'] }, psychic: { weak: ['bug', 'ghost', 'dark'], resist: ['fighting', 'psychic'], immune: [] }, bug: { weak: ['fire', 'flying', 'rock'], resist: ['grass', 'fighting', 'ground'], immune: [] }, rock: { weak: ['water', 'grass', 'fighting', 'ground', 'steel'], resist: ['normal', 'fire', 'poison', 'flying'], immune: [] }, ghost: { weak: ['ghost', 'dark'], resist: ['poison', 'bug'], immune: ['normal', 'fighting'] }, dragon: { weak: ['ice', 'dragon'], resist: ['fire', 'water', 'electric', 'grass'], immune: [] }, dark: { weak: ['fighting', 'bug'], resist: ['ghost', 'dark'], immune: ['psychic'] }, steel: { weak: ['fire', 'fighting', 'ground'], resist: ['normal', 'grass', 'ice', 'flying', 'psychic', 'bug', 'rock', 'dragon', 'steel'], immune: ['poison'] } };
             const GEN3_SPECIAL_TYPES = ['fire', 'water', 'grass', 'electric', 'ice', 'psychic', 'dragon', 'dark'];
@@ -259,6 +259,45 @@
                     return null;
                 }
             }
+            
+            async function fetchExtraData(pokemon) {
+                if (extraDataCache.has(pokemon.id)) return extraDataCache.get(pokemon.id);
+                
+                const cached = localStorage.getItem(`extraData_${pokemon.id}`);
+                if (cached) {
+                    const data = JSON.parse(cached);
+                    extraDataCache.set(pokemon.id, data);
+                    return data;
+                }
+
+                try {
+                    const encounterPromise = fetch(`https://pokeapi.co/api/v2/pokemon/${pokemon.id}/encounters`).then(res => res.json());
+                    const speciesPromise = fetch(`https://pokeapi.co/api/v2/pokemon-species/${pokemon.id}`).then(res => res.json());
+
+                    const [encounters, species] = await Promise.all([encounterPromise, speciesPromise]);
+
+                    const locations = encounters
+                        .flatMap(encounter => encounter.version_details)
+                        .filter(details => details.version.name === 'emerald')
+                        .map(details => details.location_area.name.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()));
+
+                    const extraData = {
+                        locations: [...new Set(locations)], // Remove duplicate locations
+                        isBaby: species.is_baby,
+                        isLegendary: species.is_legendary,
+                        isMythical: species.is_mythical,
+                        evolvesFrom: species.evolves_from_species ? species.evolves_from_species.name : null
+                    };
+
+                    extraDataCache.set(pokemon.id, extraData);
+                    localStorage.setItem(`extraData_${pokemon.id}`, JSON.stringify(extraData));
+                    return extraData;
+                } catch (error) {
+                    console.error(`Failed to fetch extra data for ${pokemon.name}:`, error);
+                    return { locations: [], isBaby: false, isLegendary: false, isMythical: false, evolvesFrom: null }; // Return default object on error
+                }
+            }
+
 
             function initializeApp() {
                 populateTypeFilter();
@@ -329,7 +368,7 @@
                 renderAllAnalyses();
             }
 
-            function displayPokemonDetails(pokemon, teamIndex = -1) {
+            async function displayPokemonDetails(pokemon, teamIndex = -1) {
                 detailsPlaceholder.classList.add('hidden');
                 detailsContent.classList.remove('hidden');
                 const maxStatValue = 255;
@@ -356,6 +395,10 @@
                         return `<div class="flex items-center mb-1 text-xs"><span class="w-1/3 capitalize">${stat.name.replace('special-', 'Sp. ')}${indicator}</span><div class="w-2/3 stat-bar-bg rounded-full h-4"><div class="stat-bar h-4 rounded-full flex items-center justify-end pr-2" style="width: ${(stat.base_stat / maxStatValue) * 100}%"><span class="text-black text-shadow-none font-sans font-bold">${stat.base_stat}</span></div></div></div>`
                     }).join('')}</div>
                     <div class="mt-4"><h4 class="text-lg mb-2">Moves</h4><div id="team-member-moves" class="grid grid-cols-1 gap-2 text-sm">${renderSelectedMoves(pokemon)}</div></div>
+                    <div id="extra-details-container" class="mt-4">
+                        <h4 class="text-lg mb-2">Game Info</h4>
+                        <div id="locations-container" class="text-xs text-gray-400 p-2 bg-gray-800 rounded">Loading locations...</div>
+                    </div>
                     ${teamIndex !== -1 ? `<button id="edit-moves-btn" class="w-full mt-4 text-md bg-yellow-500 text-black py-2 px-4 rounded hover:bg-yellow-400">Edit Moves</button>` : ''}`;
                 
                 if (teamIndex !== -1) {
@@ -367,6 +410,21 @@
                     document.getElementById('held-item-select').addEventListener('change', (e) => { team[teamIndex].heldItem = e.target.value; renderTeam(); });
                     document.getElementById('nature-select').addEventListener('change', (e) => { team[teamIndex].nature = e.target.value; displayPokemonDetails(team[teamIndex], teamIndex); saveTeamToStorage(); });
                     document.getElementById('ability-select').addEventListener('change', (e) => { team[teamIndex].selectedAbility = e.target.value; displayPokemonDetails(team[teamIndex], teamIndex); saveTeamToStorage(); });
+                }
+
+                // Asynchronously load and display extra data like locations
+                const extraData = await fetchExtraData(pokemon);
+                const locationsContainer = document.getElementById('locations-container');
+                if (locationsContainer) {
+                    if (extraData.locations.length > 0) {
+                        locationsContainer.innerHTML = `<strong>Catchable At:</strong><ul class="list-disc list-inside ml-2 mt-1">${extraData.locations.map(loc => `<li>${loc}</li>`).join('')}</ul>`;
+                    } else {
+                         if (extraData.evolvesFrom || extraData.isLegendary || extraData.isMythical) {
+                            locationsContainer.textContent = 'Not found in the wild.';
+                        } else {
+                            locationsContainer.textContent = 'Only available through special events or trades.';
+                        }
+                    }
                 }
             }
 

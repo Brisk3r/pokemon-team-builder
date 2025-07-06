@@ -77,7 +77,7 @@
     </style>
 </head>
 
-<body class="p-4 md:p-8">
+<body class="p-4 md:p-8 pb-24 lg:pb-8">
     <!-- Loading Overlay -->
     <div id="loading-overlay" class="fixed inset-0 bg-gray-900 bg-opacity-80 flex flex-col justify-center items-center z-50">
         <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png" class="w-16 h-16 animate-spin image-rendering-pixelated" alt="Pokeball">
@@ -274,15 +274,19 @@
                     const encounterPromise = fetch(`https://pokeapi.co/api/v2/pokemon/${pokemon.id}/encounters`).then(res => res.json());
                     const speciesPromise = fetch(`https://pokeapi.co/api/v2/pokemon-species/${pokemon.id}`).then(res => res.json());
 
-                    const [encounters, species] = await Promise.all([encounterPromise, speciesPromise]);
+                    const [encountersData, species] = await Promise.all([encounterPromise, speciesPromise]);
 
-                    const locations = encounters
-                        .flatMap(encounter => encounter.version_details)
-                        .filter(details => details.version.name === 'emerald')
-                        .map(details => details.location_area.name.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()));
+                    const locations = [];
+                    encountersData.forEach(encounter => {
+                        const hasEmeraldEncounter = encounter.version_details.some(detail => detail.version.name === 'emerald');
+                        if (hasEmeraldEncounter) {
+                            const locationName = encounter.location_area.name.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                            locations.push(locationName);
+                        }
+                    });
 
                     const extraData = {
-                        locations: [...new Set(locations)], // Remove duplicate locations
+                        locations: [...new Set(locations)],
                         isBaby: species.is_baby,
                         isLegendary: species.is_legendary,
                         isMythical: species.is_mythical,
@@ -294,7 +298,7 @@
                     return extraData;
                 } catch (error) {
                     console.error(`Failed to fetch extra data for ${pokemon.name}:`, error);
-                    return { locations: [], isBaby: false, isLegendary: false, isMythical: false, evolvesFrom: null }; // Return default object on error
+                    return { locations: [], isBaby: false, isLegendary: false, isMythical: false, evolvesFrom: null };
                 }
             }
 
@@ -412,17 +416,18 @@
                     document.getElementById('ability-select').addEventListener('change', (e) => { team[teamIndex].selectedAbility = e.target.value; displayPokemonDetails(team[teamIndex], teamIndex); saveTeamToStorage(); });
                 }
 
-                // Asynchronously load and display extra data like locations
                 const extraData = await fetchExtraData(pokemon);
                 const locationsContainer = document.getElementById('locations-container');
                 if (locationsContainer) {
                     if (extraData.locations.length > 0) {
                         locationsContainer.innerHTML = `<strong>Catchable At:</strong><ul class="list-disc list-inside ml-2 mt-1">${extraData.locations.map(loc => `<li>${loc}</li>`).join('')}</ul>`;
                     } else {
-                         if (extraData.evolvesFrom || extraData.isLegendary || extraData.isMythical) {
-                            locationsContainer.textContent = 'Not found in the wild.';
+                         if (extraData.evolvesFrom) {
+                            locationsContainer.textContent = 'Acquired through evolution.';
+                        } else if (extraData.isLegendary || extraData.isMythical) {
+                            locationsContainer.textContent = 'Acquired at a unique location.';
                         } else {
-                            locationsContainer.textContent = 'Only available through special events or trades.';
+                            locationsContainer.textContent = 'Only available as a starter or gift.';
                         }
                     }
                 }

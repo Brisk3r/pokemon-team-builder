@@ -275,13 +275,18 @@
                 }
 
                 try {
-                    const species = await fetch(`https://pokeapi.co/api/v2/pokemon-species/${pokemon.id}`).then(res => res.json());
-                    const encounterPromise = fetch(species.location_area_encounters).then(res => res.json());
+                    const speciesPromise = fetch(`https://pokeapi.co/api/v2/pokemon-species/${pokemon.id}`).then(res => res.json());
+                    // BUG FIX: Construct encounter URL manually to prevent errors with undefined URLs
+                    const encounterPromise = fetch(`https://pokeapi.co/api/v2/pokemon/${pokemon.id}/encounters`).then(res => res.json());
+
+                    const species = await speciesPromise;
+                    if (!species.evolution_chain?.url) {
+                         throw new Error("Evolution chain URL not found for " + pokemon.name);
+                    }
                     const evolutionPromise = fetch(species.evolution_chain.url).then(res => res.json());
 
                     const [encountersData, evolutionData] = await Promise.all([encounterPromise, evolutionPromise]);
 
-                    // BUG FIX: Correctly filter locations for Emerald version
                     const locations = [];
                     encountersData.forEach(encounter => {
                         const hasEmeraldEncounter = encounter.version_details.some(detail => detail.version.name === 'emerald');
@@ -291,7 +296,6 @@
                         }
                     });
 
-                    // BUG FIX: Robustly parse the entire evolution tree, including branches
                     const parseEvolutionChain = (chainNode) => {
                         const chain = [];
                         const speciesName = chainNode.species.name;
@@ -300,18 +304,22 @@
                         let method = "Base";
                         if (chainNode.evolution_details.length > 0) {
                              const evoDetails = chainNode.evolution_details[0];
-                             switch(evoDetails.trigger.name) {
-                                case 'level-up':
-                                    method = evoDetails.min_level ? `Level ${evoDetails.min_level}` : 'Level Up';
+                             const trigger = evoDetails.trigger.name.replace(/-/g, ' ');
+
+                             switch(trigger) {
+                                case 'level up':
+                                    if (evoDetails.min_happiness) method = 'High Friendship';
+                                    else if (evoDetails.min_level) method = `Level ${evoDetails.min_level}`;
+                                    else method = 'Level Up';
                                     break;
                                 case 'trade':
                                     method = 'Trade';
                                     break;
-                                case 'use-item':
+                                case 'use item':
                                     method = `Use ${evoDetails.item.name.replace(/-/g, ' ')}`;
                                     break;
                                 default:
-                                    method = evoDetails.trigger.name.replace(/-/g, ' ');
+                                    method = trigger;
                             }
                         }
                         
@@ -477,7 +485,6 @@
                 }
                 const evolutionContainer = document.getElementById('evolution-container');
                 if (evolutionContainer) {
-                    // BUG FIX: Correctly check for evolution chain length
                     if (extraData.evolutionChain.length > 1) {
                         let evoHTML = '<strong>Evolutions:</strong><div class="flex items-center justify-center gap-1 mt-1 flex-wrap">';
                         const fullChain = extraData.evolutionChain;
@@ -749,4 +756,3 @@
     </script>
 </body>
 </html>
-

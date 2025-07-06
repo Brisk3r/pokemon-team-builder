@@ -64,7 +64,7 @@
 
 <body class="p-4 md:p-8">
     <!-- Loading Overlay -->
-    <div id="loading-overlay" class="fixed inset-0 bg-gray-900 bg-opacity-90 flex flex-col justify-center items-center z-50">
+    <div id="loading-overlay" class="fixed inset-0 bg-gray-900 bg-opacity-80 flex flex-col justify-center items-center z-50">
         <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png" class="w-16 h-16 animate-spin image-rendering-pixelated" alt="Pokeball">
         <p class="text-xl mt-4">Loading Game Data...</p>
         <p id="loading-progress" class="text-sm text-gray-400 mt-2">Initializing...</p>
@@ -75,38 +75,16 @@
         <p id="toast-message"></p>
     </div>
 
-    <div class="container mx-auto max-w-screen-2xl">
-        <header class="text-center mb-4">
+    <div class="container mx-auto max-w-screen-xl">
+        <header class="text-center mb-8">
             <h1 class="text-3xl md:text-5xl font-bold text-yellow-300 tracking-wider">Pokémon Emerald Team Builder</h1>
-            <p class="text-gray-400 mt-2">Build & Share the ultimate team for your Emerald playthrough!</p>
+            <p class="text-gray-400 mt-2">Build the ultimate team for your Emerald playthrough!</p>
         </header>
-
-        <!-- Session Management -->
-        <section id="session-section" class="mb-6 p-4 bg-[#161b22] border-2 border-gray-700 rounded-lg">
-            <h2 class="text-lg mb-3 text-center text-yellow-300">Team Session</h2>
-            <div class="flex flex-col md:flex-row items-center justify-center gap-4">
-                <div class="text-center">
-                    <label for="team-id-display" class="block text-sm text-gray-400 mb-1">Current Team ID</label>
-                    <div class="flex">
-                        <input type="text" id="team-id-display" readonly class="p-2 rounded-l bg-gray-800 border border-gray-600 w-48 md:w-64 text-center font-mono">
-                        <button id="copy-link-btn" class="p-2 rounded-r bg-yellow-500 text-black hover:bg-yellow-400">Copy Link</button>
-                    </div>
-                </div>
-                 <div class="text-center">
-                    <label for="load-team-id" class="block text-sm text-gray-400 mb-1">Load Team by ID</label>
-                    <div class="flex">
-                        <input type="text" id="load-team-id" placeholder="Enter Team ID..." class="p-2 rounded-l bg-gray-800 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-yellow-400">
-                        <button id="load-team-btn" class="p-2 rounded-r bg-blue-500 text-white hover:bg-blue-400">Load</button>
-                    </div>
-                </div>
-                <button id="new-session-btn" class="w-full md:w-auto p-2 rounded bg-green-600 text-white hover:bg-green-500">New Team</button>
-            </div>
-        </section>
 
         <!-- Team Section -->
         <section id="team-section" class="mb-8">
-            <div class="flex justify-between items-center mb-4 border-b-2 border-gray-600 pb-2">
-                 <h2 class="text-2xl text-center flex-grow">Your Team</h2>
+             <div class="flex justify-between items-center mb-4 border-b-2 border-gray-600 pb-2">
+                 <h2 class="text-2xl text-center flex-grow">Your Team (Auto-saves)</h2>
                  <button id="clear-team-btn" class="p-2 text-sm rounded bg-red-600 text-white hover:bg-red-500">Clear Team</button>
             </div>
             <div id="team-container" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4"></div>
@@ -153,485 +131,360 @@
         </div>
     </div>
 
-    <!-- Firebase SDK -->
-    <script type="module">
-        // Import the functions you need from the SDKs you need
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, onSnapshot, collection, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- CONSTANTS AND STATE ---
+            const EMERALD_HOENN_DEX_IDS = [252, 253, 254, 255, 256, 257, 258, 259, 260, 261, 262, 263, 264, 265, 266, 267, 268, 269, 270, 271, 272, 273, 274, 275, 276, 277, 278, 279, 280, 281, 282, 283, 284, 285, 286, 287, 288, 289, 290, 291, 292, 293, 294, 295, 296, 297, 298, 299, 300, 301, 302, 303, 304, 305, 306, 307, 308, 309, 310, 311, 312, 313, 314, 315, 316, 317, 318, 319, 320, 321, 322, 323, 324, 325, 326, 327, 328, 329, 330, 331, 332, 333, 334, 335, 336, 337, 338, 339, 340, 341, 342, 343, 344, 345, 346, 347, 348, 349, 350, 351, 352, 353, 354, 355, 356, 357, 358, 359, 360, 361, 362, 363, 364, 365, 366, 367, 368, 369, 370, 371, 372, 373, 374, 375, 376, 377, 378, 379, 380, 381, 382, 383, 384, 385, 386, 41, 42, 63, 64, 65, 77, 78, 92, 93, 94, 108, 111, 112, 115, 123, 127, 129, 130, 201, 215, 225, 227, 235, 241, 60, 61, 62, 72, 73, 79, 80, 199, 90, 91, 116, 117, 230, 120, 121, 131, 138, 139, 140, 141, 142, 179, 180, 181, 183, 184, 194, 195, 211, 222, 223, 224, 226, 43, 44, 45, 182, 69, 70, 71, 84, 85, 102, 103, 113, 242, 114, 128, 175, 176, 193, 203, 206, 214, 216, 217, 234];
+            const HELD_ITEMS = {'None': 'none', 'Leftovers': 'leftovers', 'Choice Band': 'choice-band', 'Lum Berry': 'lum-berry', 'Salac Berry': 'salac-berry', 'Petaya Berry': 'petaya-berry', 'Liechi Berry': 'liechi-berry', 'White Herb': 'white-herb', 'Focus Band': 'focus-band', 'Scope Lens': 'scope-lens', 'Quick Claw': 'quick-claw', "King's Rock": 'kings-rock', 'Bright Powder': 'bright-powder', 'Shell Bell': 'shell-bell', 'Macho Brace': 'macho-brace', 'Soothe Bell': 'soothe-bell', 'Black Belt': 'black-belt', 'Black Glasses': 'black-glasses', 'Charcoal': 'charcoal', 'Dragon Fang': 'dragon-fang', 'Hard Stone': 'hard-stone', 'Magnet': 'magnet', 'Metal Coat': 'metal-coat', 'Miracle Seed': 'miracle-seed', 'Mystic Water': 'mystic-water', 'Never-Melt Ice': 'never-melt-ice', 'Poison Barb': 'poison-barb', 'Sharp Beak': 'sharp-beak', 'Silk Scarf': 'silk-scarf', 'Silver Powder': 'silver-powder', 'Soft Sand': 'soft-sand', 'Spell Tag': 'spell-tag', 'Twisted Spoon': 'twisted-spoon'};
+            const NATURES = { 'Hardy': { inc: null, dec: null }, 'Lonely': { inc: 'attack', dec: 'defense' }, 'Brave': { inc: 'attack', dec: 'speed' }, 'Adamant': { inc: 'attack', dec: 'special-attack' }, 'Naughty': { inc: 'attack', dec: 'special-defense' }, 'Bold': { inc: 'defense', dec: 'attack' }, 'Docile': { inc: null, dec: null }, 'Relaxed': { inc: 'defense', dec: 'speed' }, 'Impish': { inc: 'defense', dec: 'special-attack' }, 'Lax': { inc: 'defense', dec: 'special-defense' }, 'Timid': { inc: 'speed', dec: 'attack' }, 'Hasty': { inc: 'speed', dec: 'defense' }, 'Serious': { inc: null, dec: null }, 'Jolly': { inc: 'speed', dec: 'special-attack' }, 'Naive': { inc: 'speed', dec: 'special-defense' }, 'Modest': { inc: 'special-attack', dec: 'attack' }, 'Mild': { inc: 'special-attack', dec: 'defense' }, 'Quiet': { inc: 'special-attack', dec: 'speed' }, 'Bashful': { inc: null, dec: null }, 'Rash': { inc: 'special-attack', dec: 'special-defense' }, 'Calm': { inc: 'special-defense', dec: 'attack' }, 'Gentle': { inc: 'special-defense', dec: 'defense' }, 'Sassy': { inc: 'special-defense', dec: 'speed' }, 'Careful': { inc: 'special-defense', dec: 'special-attack' }, 'Quirky': { inc: null, dec: null } };
+            const allPokemonData = [];
+            const moveDataCache = new Map();
+            const abilityDataCache = new Map();
+            let team = Array(6).fill(null);
+            const TYPE_CHART = { normal: { weak: ['fighting'], resist: [], immune: ['ghost'] }, fire: { weak: ['water', 'ground', 'rock'], resist: ['fire', 'grass', 'ice', 'bug', 'steel'], immune: [] }, water: { weak: ['electric', 'grass'], resist: ['fire', 'water', 'ice', 'steel'], immune: [] }, electric: { weak: ['ground'], resist: ['electric', 'flying', 'steel'], immune: [] }, grass: { weak: ['fire', 'ice', 'poison', 'flying', 'bug'], resist: ['water', 'electric', 'grass', 'ground'], immune: [] }, ice: { weak: ['fire', 'fighting', 'rock', 'steel'], resist: ['ice'], immune: [] }, fighting: { weak: ['flying', 'psychic'], resist: ['bug', 'rock', 'dark'], immune: [] }, poison: { weak: ['ground', 'psychic'], resist: ['grass', 'fighting', 'poison', 'bug'], immune: [] }, ground: { weak: ['water', 'grass', 'ice'], resist: ['poison', 'rock'], immune: ['electric'] }, flying: { weak: ['electric', 'ice', 'rock'], resist: ['grass', 'fighting', 'bug'], immune: ['ground'] }, psychic: { weak: ['bug', 'ghost', 'dark'], resist: ['fighting', 'psychic'], immune: [] }, bug: { weak: ['fire', 'flying', 'rock'], resist: ['grass', 'fighting', 'ground'], immune: [] }, rock: { weak: ['water', 'grass', 'fighting', 'ground', 'steel'], resist: ['normal', 'fire', 'poison', 'flying'], immune: [] }, ghost: { weak: ['ghost', 'dark'], resist: ['poison', 'bug'], immune: ['normal', 'fighting'] }, dragon: { weak: ['ice', 'dragon'], resist: ['fire', 'water', 'electric', 'grass'], immune: [] }, dark: { weak: ['fighting', 'bug'], resist: ['ghost', 'dark'], immune: ['psychic'] }, steel: { weak: ['fire', 'fighting', 'ground'], resist: ['normal', 'grass', 'ice', 'flying', 'psychic', 'bug', 'rock', 'dragon', 'steel'], immune: ['poison'] } };
+            const GEN3_SPECIAL_TYPES = ['fire', 'water', 'grass', 'electric', 'ice', 'psychic', 'dragon', 'dark'];
+            
+            // --- DOM ELEMENTS ---
+            const loadingOverlay = document.getElementById('loading-overlay'), loadingProgress = document.getElementById('loading-progress'), teamContainer = document.getElementById('team-container'), pokemonList = document.getElementById('pokemon-list'), searchInput = document.getElementById('search-pokemon'), typeFilter = document.getElementById('type-filter'), detailsPlaceholder = document.getElementById('details-placeholder'), detailsContent = document.getElementById('details-content'), teamAnalysisContent = document.getElementById('team-analysis-content'), moveModal = document.getElementById('move-modal'), modalBackdrop = document.getElementById('modal-backdrop'), modalPanel = document.getElementById('modal-panel'), modalContent = document.getElementById('modal-content'), closeModalBtn = document.getElementById('close-modal-btn'), clearTeamBtn = document.getElementById('clear-team-btn'), toast = document.getElementById('toast'), toastMessage = document.getElementById('toast-message');
 
-        // --- GLOBAL VARIABLES & STATE ---
-        let db, auth, userId, teamDocRef;
-        let currentTeamId = null;
-        let unsubscribeTeamListener = null; // To detach the old listener when loading a new team
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-team-builder';
-
-        // --- FIREBASE SETUP ---
-        async function setupFirebase() {
-            try {
-                const firebaseConfig = JSON.parse(__firebase_config);
-                const app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
-                auth = getAuth(app);
-
-                return new Promise((resolve) => {
-                    onAuthStateChanged(auth, async (user) => {
-                        if (user) {
-                            userId = user.uid;
-                            console.log("User is signed in with UID:", userId);
-                            resolve();
-                        } else {
-                            await signInAnonymously(auth);
-                            console.log("Signing in anonymously...");
-                        }
-                    });
-                });
-
-            } catch (error) {
-                console.error("Firebase initialization failed:", error);
-                // Fallback for environments without firebase config
-                loadingProgress.textContent = "Error: Could not connect to database. Sharing is disabled.";
-                return Promise.resolve(); // Resolve to allow the app to continue in offline mode
+            // --- DATA FETCHING & INITIALIZATION ---
+            async function fetchGameData() {
+                try {
+                    const cachedPokemon = localStorage.getItem('gen3EmeraldHoennDexData');
+                    const cachedAbilities = localStorage.getItem('gen3AbilityData');
+                    if (cachedPokemon && cachedAbilities) {
+                        allPokemonData.push(...JSON.parse(cachedPokemon));
+                        const abilities = JSON.parse(cachedAbilities);
+                        abilities.forEach(ability => abilityDataCache.set(ability.name, ability));
+                        loadingProgress.textContent = `Loaded ${allPokemonData.length} Pokémon and ${abilityDataCache.size} abilities from cache.`;
+                        return;
+                    }
+                    loadingProgress.textContent = 'Fetching Pokémon data...';
+                    const pokemonPromises = EMERALD_HOENN_DEX_IDS.map(id => fetch(`https://pokeapi.co/api/v2/pokemon/${id}`).then(res => res.json()));
+                    const pokemonResults = await Promise.all(pokemonPromises);
+                    const abilityUrls = new Set();
+                    for (const data of pokemonResults) {
+                        const moves = data.moves.filter(move => move.version_group_details.some(d => ['ruby-sapphire', 'emerald', 'firered-leafgreen'].includes(d.version_group.name))).map(move => move.move.name);
+                        const abilities = data.abilities.map(a => {
+                            abilityUrls.add(a.ability.url);
+                            return a.ability.name;
+                        });
+                        allPokemonData.push({ id: data.id, name: data.name, nickname: data.name, sprite: data.sprites.front_default, types: data.types.map(t => t.type.name), stats: data.stats.map(s => ({ name: s.stat.name, base_stat: s.base_stat })), abilities: abilities, selectedAbility: abilities[0], moves: [...new Set(moves)].sort(), selectedMoves: [], heldItem: 'none', nature: 'Hardy' });
+                    }
+                    allPokemonData.sort((a, b) => a.id - b.id);
+                    loadingProgress.textContent = `Fetching ${abilityUrls.size} ability details...`;
+                    const abilityPromises = [...abilityUrls].map(url => fetch(url).then(res => res.json()));
+                    const abilityResults = await Promise.all(abilityPromises);
+                    const abilityStorage = [];
+                    for (const data of abilityResults) {
+                        const effectEntry = data.effect_entries.find(e => e.language.name === 'en');
+                        const ability = { name: data.name, description: effectEntry ? effectEntry.short_effect : 'No description available.' };
+                        abilityDataCache.set(data.name, ability);
+                        abilityStorage.push(ability);
+                    }
+                    localStorage.setItem('gen3EmeraldHoennDexData', JSON.stringify(allPokemonData));
+                    localStorage.setItem('gen3AbilityData', JSON.stringify(abilityStorage));
+                } catch (error) {
+                    console.error("Failed to fetch game data:", error);
+                    loadingOverlay.innerHTML = `<p class="text-xl text-red-500">Failed to load data. Please refresh.</p>`;
+                }
             }
-        }
 
+            async function fetchMoveData(moveName) {
+                if (moveDataCache.has(moveName)) return moveDataCache.get(moveName);
+                if (sessionStorage.getItem(`move_${moveName}`)) {
+                    const cached = JSON.parse(sessionStorage.getItem(`move_${moveName}`));
+                    moveDataCache.set(moveName, cached);
+                    return cached;
+                }
+                try {
+                    const res = await fetch(`https://pokeapi.co/api/v2/move/${moveName}`);
+                    const data = await res.json();
+                    const moveDetails = { name: data.name, power: data.power, accuracy: data.accuracy, type: data.type.name, damage_class: GEN3_SPECIAL_TYPES.includes(data.type.name) ? 'special' : 'physical' };
+                    moveDataCache.set(moveName, moveDetails);
+                    sessionStorage.setItem(`move_${moveName}`, JSON.stringify(moveDetails));
+                    return moveDetails;
+                } catch (error) {
+                    console.error(`Failed to fetch move data for ${moveName}:`, error);
+                    return null;
+                }
+            }
 
-        // --- CONSTANTS AND STATE ---
-        const EMERALD_HOENN_DEX_IDS = [252, 253, 254, 255, 256, 257, 258, 259, 260, 261, 262, 263, 264, 265, 266, 267, 268, 269, 270, 271, 272, 273, 274, 275, 276, 277, 278, 279, 280, 281, 282, 283, 284, 285, 286, 287, 288, 289, 290, 291, 292, 293, 294, 295, 296, 297, 298, 299, 300, 301, 302, 303, 304, 305, 306, 307, 308, 309, 310, 311, 312, 313, 314, 315, 316, 317, 318, 319, 320, 321, 322, 323, 324, 325, 326, 327, 328, 329, 330, 331, 332, 333, 334, 335, 336, 337, 338, 339, 340, 341, 342, 343, 344, 345, 346, 347, 348, 349, 350, 351, 352, 353, 354, 355, 356, 357, 358, 359, 360, 361, 362, 363, 364, 365, 366, 367, 368, 369, 370, 371, 372, 373, 374, 375, 376, 377, 378, 379, 380, 381, 382, 383, 384, 385, 386, 41, 42, 63, 64, 65, 77, 78, 92, 93, 94, 108, 111, 112, 115, 123, 127, 129, 130, 201, 215, 225, 227, 235, 241, 60, 61, 62, 72, 73, 79, 80, 199, 90, 91, 116, 117, 230, 120, 121, 131, 138, 139, 140, 141, 142, 179, 180, 181, 183, 184, 194, 195, 211, 222, 223, 224, 226, 43, 44, 45, 182, 69, 70, 71, 84, 85, 102, 103, 113, 242, 114, 128, 175, 176, 193, 203, 206, 214, 216, 217, 234];
-        const HELD_ITEMS = {'None': 'none', 'Leftovers': 'leftovers', 'Choice Band': 'choice-band', 'Lum Berry': 'lum-berry', 'Salac Berry': 'salac-berry', 'Petaya Berry': 'petaya-berry', 'Liechi Berry': 'liechi-berry', 'White Herb': 'white-herb', 'Focus Band': 'focus-band', 'Scope Lens': 'scope-lens', 'Quick Claw': 'quick-claw', "King's Rock": 'kings-rock', 'Bright Powder': 'bright-powder', 'Shell Bell': 'shell-bell', 'Macho Brace': 'macho-brace', 'Soothe Bell': 'soothe-bell', 'Black Belt': 'black-belt', 'Black Glasses': 'black-glasses', 'Charcoal': 'charcoal', 'Dragon Fang': 'dragon-fang', 'Hard Stone': 'hard-stone', 'Magnet': 'magnet', 'Metal Coat': 'metal-coat', 'Miracle Seed': 'miracle-seed', 'Mystic Water': 'mystic-water', 'Never-Melt Ice': 'never-melt-ice', 'Poison Barb': 'poison-barb', 'Sharp Beak': 'sharp-beak', 'Silk Scarf': 'silk-scarf', 'Silver Powder': 'silver-powder', 'Soft Sand': 'soft-sand', 'Spell Tag': 'spell-tag', 'Twisted Spoon': 'twisted-spoon'};
-        const NATURES = { 'Hardy': { inc: null, dec: null }, 'Lonely': { inc: 'attack', dec: 'defense' }, 'Brave': { inc: 'attack', dec: 'speed' }, 'Adamant': { inc: 'attack', dec: 'special-attack' }, 'Naughty': { inc: 'attack', dec: 'special-defense' }, 'Bold': { inc: 'defense', dec: 'attack' }, 'Docile': { inc: null, dec: null }, 'Relaxed': { inc: 'defense', dec: 'speed' }, 'Impish': { inc: 'defense', dec: 'special-attack' }, 'Lax': { inc: 'defense', dec: 'special-defense' }, 'Timid': { inc: 'speed', dec: 'attack' }, 'Hasty': { inc: 'speed', dec: 'defense' }, 'Serious': { inc: null, dec: null }, 'Jolly': { inc: 'speed', dec: 'special-attack' }, 'Naive': { inc: 'speed', dec: 'special-defense' }, 'Modest': { inc: 'special-attack', dec: 'attack' }, 'Mild': { inc: 'special-attack', dec: 'defense' }, 'Quiet': { inc: 'special-attack', dec: 'speed' }, 'Bashful': { inc: null, dec: null }, 'Rash': { inc: 'special-attack', dec: 'special-defense' }, 'Calm': { inc: 'special-defense', dec: 'attack' }, 'Gentle': { inc: 'special-defense', dec: 'defense' }, 'Sassy': { inc: 'special-defense', dec: 'speed' }, 'Careful': { inc: 'special-defense', dec: 'special-attack' }, 'Quirky': { inc: null, dec: null } };
-        const allPokemonData = [];
-        const moveDataCache = new Map();
-        const abilityDataCache = new Map();
-        let team = Array(6).fill(null);
-        const TYPE_CHART = { normal: { weak: ['fighting'], resist: [], immune: ['ghost'] }, fire: { weak: ['water', 'ground', 'rock'], resist: ['fire', 'grass', 'ice', 'bug', 'steel'], immune: [] }, water: { weak: ['electric', 'grass'], resist: ['fire', 'water', 'ice', 'steel'], immune: [] }, electric: { weak: ['ground'], resist: ['electric', 'flying', 'steel'], immune: [] }, grass: { weak: ['fire', 'ice', 'poison', 'flying', 'bug'], resist: ['water', 'electric', 'grass', 'ground'], immune: [] }, ice: { weak: ['fire', 'fighting', 'rock', 'steel'], resist: ['ice'], immune: [] }, fighting: { weak: ['flying', 'psychic'], resist: ['bug', 'rock', 'dark'], immune: [] }, poison: { weak: ['ground', 'psychic'], resist: ['grass', 'fighting', 'poison', 'bug'], immune: [] }, ground: { weak: ['water', 'grass', 'ice'], resist: ['poison', 'rock'], immune: ['electric'] }, flying: { weak: ['electric', 'ice', 'rock'], resist: ['grass', 'fighting', 'bug'], immune: ['ground'] }, psychic: { weak: ['bug', 'ghost', 'dark'], resist: ['fighting', 'psychic'], immune: [] }, bug: { weak: ['fire', 'flying', 'rock'], resist: ['grass', 'fighting', 'ground'], immune: [] }, rock: { weak: ['water', 'grass', 'fighting', 'ground', 'steel'], resist: ['normal', 'fire', 'poison', 'flying'], immune: [] }, ghost: { weak: ['ghost', 'dark'], resist: ['poison', 'bug'], immune: ['normal', 'fighting'] }, dragon: { weak: ['ice', 'dragon'], resist: ['fire', 'water', 'electric', 'grass'], immune: [] }, dark: { weak: ['fighting', 'bug'], resist: ['ghost', 'dark'], immune: ['psychic'] }, steel: { weak: ['fire', 'fighting', 'ground'], resist: ['normal', 'grass', 'ice', 'flying', 'psychic', 'bug', 'rock', 'dragon', 'steel'], immune: ['poison'] } };
-        const GEN3_SPECIAL_TYPES = ['fire', 'water', 'grass', 'electric', 'ice', 'psychic', 'dragon', 'dark'];
+            function initializeApp() {
+                populateTypeFilter();
+                loadTeamFromStorage();
+                renderPokemonList();
+                renderTeam();
+                loadingOverlay.style.display = 'none';
+            }
 
-        // --- DOM ELEMENTS ---
-        const loadingOverlay = document.getElementById('loading-overlay'), loadingProgress = document.getElementById('loading-progress'), teamContainer = document.getElementById('team-container'), pokemonList = document.getElementById('pokemon-list'), searchInput = document.getElementById('search-pokemon'), typeFilter = document.getElementById('type-filter'), detailsPlaceholder = document.getElementById('details-placeholder'), detailsContent = document.getElementById('details-content'), teamAnalysisContent = document.getElementById('team-analysis-content'), moveModal = document.getElementById('move-modal'), modalBackdrop = document.getElementById('modal-backdrop'), modalPanel = document.getElementById('modal-panel'), modalContent = document.getElementById('modal-content'), closeModalBtn = document.getElementById('close-modal-btn'), teamIdDisplay = document.getElementById('team-id-display'), copyLinkBtn = document.getElementById('copy-link-btn'), loadTeamIdInput = document.getElementById('load-team-id'), loadTeamBtn = document.getElementById('load-team-btn'), newSessionBtn = document.getElementById('new-session-btn'), clearTeamBtn = document.getElementById('clear-team-btn'), toast = document.getElementById('toast'), toastMessage = document.getElementById('toast-message');
+            // --- RENDER FUNCTIONS ---
+            function populateTypeFilter() {
+                Object.keys(TYPE_CHART).forEach(type => {
+                    const option = document.createElement('option');
+                    option.value = type;
+                    option.textContent = type.charAt(0).toUpperCase() + type.slice(1);
+                    typeFilter.appendChild(option);
+                });
+            }
 
-        // --- DATA FETCHING & INITIALIZATION ---
-        async function fetchGameData() {
-            try {
-                const cachedPokemon = localStorage.getItem('gen3EmeraldHoennDexData');
-                const cachedAbilities = localStorage.getItem('gen3AbilityData');
-                if (cachedPokemon && cachedAbilities) {
-                    allPokemonData.push(...JSON.parse(cachedPokemon));
-                    const abilities = JSON.parse(cachedAbilities);
-                    abilities.forEach(ability => abilityDataCache.set(ability.name, ability));
-                    loadingProgress.textContent = `Loaded ${allPokemonData.length} Pokémon and ${abilityDataCache.size} abilities from cache.`;
+            function renderPokemonList() {
+                pokemonList.innerHTML = '';
+                const searchTerm = searchInput.value.toLowerCase();
+                const selectedType = typeFilter.value;
+                const filteredPokemon = allPokemonData.filter(p => p.name.toLowerCase().includes(searchTerm) && (selectedType === 'all' || p.types.includes(selectedType)));
+                if (filteredPokemon.length === 0) {
+                    pokemonList.innerHTML = `<p class="col-span-full text-center text-gray-400">No Pokémon found.</p>`;
                     return;
                 }
-                loadingProgress.textContent = 'Fetching Pokémon data...';
-                const pokemonPromises = EMERALD_HOENN_DEX_IDS.map(id => fetch(`https://pokeapi.co/api/v2/pokemon/${id}`).then(res => res.json()));
-                const pokemonResults = await Promise.all(pokemonPromises);
-                const abilityUrls = new Set();
-                for (const data of pokemonResults) {
-                    const moves = data.moves.filter(move => move.version_group_details.some(d => ['ruby-sapphire', 'emerald', 'firered-leafgreen'].includes(d.version_group.name))).map(move => move.move.name);
-                    const abilities = data.abilities.map(a => {
-                        abilityUrls.add(a.ability.url);
-                        return a.ability.name;
-                    });
-                    allPokemonData.push({ id: data.id, name: data.name, nickname: data.name, sprite: data.sprites.front_default, types: data.types.map(t => t.type.name), stats: data.stats.map(s => ({ name: s.stat.name, base_stat: s.base_stat })), abilities: abilities, selectedAbility: abilities[0], moves: [...new Set(moves)].sort(), selectedMoves: [], heldItem: 'none', nature: 'Hardy' });
-                }
-                allPokemonData.sort((a, b) => a.id - b.id);
-                loadingProgress.textContent = `Fetching ${abilityUrls.size} ability details...`;
-                const abilityPromises = [...abilityUrls].map(url => fetch(url).then(res => res.json()));
-                const abilityResults = await Promise.all(abilityPromises);
-                const abilityStorage = [];
-                for (const data of abilityResults) {
-                    const effectEntry = data.effect_entries.find(e => e.language.name === 'en');
-                    const ability = { name: data.name, description: effectEntry ? effectEntry.short_effect : 'No description available.' };
-                    abilityDataCache.set(data.name, ability);
-                    abilityStorage.push(ability);
-                }
-                localStorage.setItem('gen3EmeraldHoennDexData', JSON.stringify(allPokemonData));
-                localStorage.setItem('gen3AbilityData', JSON.stringify(abilityStorage));
-            } catch (error) {
-                console.error("Failed to fetch game data:", error);
-                loadingOverlay.innerHTML = `<p class="text-xl text-red-500">Failed to load data. Please refresh.</p>`;
-            }
-        }
-
-        async function fetchMoveData(moveName) {
-            if (moveDataCache.has(moveName)) return moveDataCache.get(moveName);
-            if (sessionStorage.getItem(`move_${moveName}`)) {
-                const cached = JSON.parse(sessionStorage.getItem(`move_${moveName}`));
-                moveDataCache.set(moveName, cached);
-                return cached;
-            }
-            try {
-                const res = await fetch(`https://pokeapi.co/api/v2/move/${moveName}`);
-                const data = await res.json();
-                const moveDetails = { name: data.name, power: data.power, accuracy: data.accuracy, type: data.type.name, damage_class: GEN3_SPECIAL_TYPES.includes(data.type.name) ? 'special' : 'physical' };
-                moveDataCache.set(moveName, moveDetails);
-                sessionStorage.setItem(`move_${moveName}`, JSON.stringify(moveDetails));
-                return moveDetails;
-            } catch (error) {
-                console.error(`Failed to fetch move data for ${moveName}:`, error);
-                return null;
-            }
-        }
-
-        function initializeApp() {
-            populateTypeFilter();
-            renderPokemonList();
-            loadingOverlay.style.display = 'none';
-        }
-
-        // --- RENDER FUNCTIONS ---
-        function populateTypeFilter() {
-            Object.keys(TYPE_CHART).forEach(type => {
-                const option = document.createElement('option');
-                option.value = type;
-                option.textContent = type.charAt(0).toUpperCase() + type.slice(1);
-                typeFilter.appendChild(option);
-            });
-        }
-
-        function renderPokemonList() {
-            pokemonList.innerHTML = '';
-            const searchTerm = searchInput.value.toLowerCase();
-            const selectedType = typeFilter.value;
-            const filteredPokemon = allPokemonData.filter(p => p.name.toLowerCase().includes(searchTerm) && (selectedType === 'all' || p.types.includes(selectedType)));
-            if (filteredPokemon.length === 0) {
-                pokemonList.innerHTML = `<p class="col-span-full text-center text-gray-400">No Pokémon found.</p>`;
-                return;
-            }
-            filteredPokemon.forEach(pokemon => {
-                const card = document.createElement('div');
-                card.className = 'pokemon-card p-2 rounded-lg text-center cursor-pointer';
-                card.innerHTML = `<img src="${pokemon.sprite}" alt="${pokemon.name}" class="mx-auto w-16 h-16 image-rendering-pixelated"><p class="text-sm capitalize mt-1">${pokemon.name}</p>`;
-                card.addEventListener('click', () => addPokemonToTeam(pokemon));
-                pokemonList.appendChild(card);
-            });
-        }
-
-        function renderTeam() {
-            teamContainer.innerHTML = '';
-            team.forEach((pokemon, index) => {
-                const slot = document.createElement('div');
-                slot.className = 'team-slot relative p-4 rounded-lg flex flex-col items-center justify-center h-40 transition-all duration-200';
-                if (pokemon) {
-                    slot.classList.add('pokemon-card', 'cursor-pointer');
-                    const itemSprite = pokemon.heldItem && pokemon.heldItem !== 'none' ? `<img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/${pokemon.heldItem}.png" class="absolute bottom-1 left-1 w-6 h-6 image-rendering-pixelated" alt="${pokemon.heldItem}" onerror="this.style.display='none'"/>` : '';
-                    slot.innerHTML = `<img src="${pokemon.sprite}" alt="${pokemon.name}" class="w-20 h-20 image-rendering-pixelated mb-2"><p class="text-md capitalize text-center">${pokemon.nickname}</p><button class="remove-btn absolute top-1 right-1 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold opacity-50 hover:opacity-100 transition-opacity">×</button>${itemSprite}`;
-                    slot.querySelector('.remove-btn').addEventListener('click', (e) => { e.stopPropagation(); removePokemonFromTeam(index); });
-                    slot.addEventListener('click', () => displayPokemonDetails(pokemon, index));
-                } else {
-                    slot.classList.add('empty');
-                    slot.innerHTML = `<span class="text-4xl text-gray-600">+</span>`;
-                    slot.addEventListener('click', () => document.getElementById('pokemon-list-container').scrollIntoView({ behavior: 'smooth' }));
-                }
-                teamContainer.appendChild(slot);
-            });
-            renderAllAnalyses();
-        }
-
-        function displayPokemonDetails(pokemon, teamIndex = -1) {
-            detailsPlaceholder.classList.add('hidden');
-            detailsContent.classList.remove('hidden');
-            const maxStatValue = 255;
-            const itemOptions = Object.entries(HELD_ITEMS).map(([name, value]) => `<option value="${value}" ${pokemon.heldItem === value ? 'selected' : ''}>${name}</option>`).join('');
-            const natureOptions = Object.keys(NATURES).map(name => `<option value="${name}" ${pokemon.nature === name ? 'selected' : ''}>${name}</option>`).join('');
-            const abilityOptions = pokemon.abilities.map(name => `<option value="${name}" ${pokemon.selectedAbility === name ? 'selected' : ''}>${name.charAt(0).toUpperCase() + name.slice(1)}</option>`).join('');
-            const selectedNature = NATURES[pokemon.nature];
-            const abilityDesc = abilityDataCache.get(pokemon.selectedAbility)?.description || 'No description.';
-            detailsContent.innerHTML = `
-                <div class="text-center">
-                    <img src="${pokemon.sprite}" alt="${pokemon.name}" class="mx-auto w-24 h-24 image-rendering-pixelated">
-                    <input type="text" id="nickname-input" value="${pokemon.nickname}" class="w-full bg-transparent text-2xl capitalize font-bold mt-2 text-center border-b-2 border-gray-700 focus:border-yellow-400 focus:outline-none">
-                    <div class="flex justify-center gap-2 mt-2">${pokemon.types.map(type => `<span class="type-badge ${type}">${type}</span>`).join('')}</div>
-                </div>
-                <div class="mt-4"><h4 class="text-lg mb-2 text-xs">Ability</h4><select id="ability-select" class="w-full p-2 rounded bg-gray-800 border border-gray-600 text-xs focus:outline-none focus:ring-2 focus:ring-yellow-400">${abilityOptions}</select><p id="ability-description" class="text-xs text-gray-400 mt-1 h-10">${abilityDesc}</p></div>
-                <div class="grid grid-cols-2 gap-4 mt-2">
-                    <div><h4 class="text-lg mb-2 text-xs">Held Item</h4><select id="held-item-select" class="w-full p-2 rounded bg-gray-800 border border-gray-600 text-xs focus:outline-none focus:ring-2 focus:ring-yellow-400">${itemOptions}</select></div>
-                    <div><h4 class="text-lg mb-2 text-xs">Nature</h4><select id="nature-select" class="w-full p-2 rounded bg-gray-800 border border-gray-600 text-xs focus:outline-none focus:ring-2 focus:ring-yellow-400">${natureOptions}</select></div>
-                </div>
-                <div class="mt-4"><h4 class="text-lg mb-2">Base Stats</h4>${pokemon.stats.map(stat => {
-                    let indicator = '';
-                    if (selectedNature.inc === stat.name) indicator = '<span class="stat-up"> ▲</span>';
-                    if (selectedNature.dec === stat.name) indicator = '<span class="stat-down"> ▼</span>';
-                    return `<div class="flex items-center mb-1 text-xs"><span class="w-1/3 capitalize">${stat.name.replace('special-', 'Sp. ')}${indicator}</span><div class="w-2/3 stat-bar-bg rounded-full h-4"><div class="stat-bar h-4 rounded-full flex items-center justify-end pr-2" style="width: ${(stat.base_stat / maxStatValue) * 100}%"><span class="text-black text-shadow-none font-sans font-bold">${stat.base_stat}</span></div></div></div>`
-                }).join('')}</div>
-                <div class="mt-4"><h4 class="text-lg mb-2">Moves</h4><div id="team-member-moves" class="grid grid-cols-1 gap-2 text-sm">${renderSelectedMoves(pokemon)}</div></div>
-                ${teamIndex !== -1 ? `<button id="edit-moves-btn" class="w-full mt-4 text-md bg-yellow-500 text-black py-2 px-4 rounded hover:bg-yellow-400">Edit Moves</button>` : ''}`;
-
-            if (teamIndex !== -1) {
-                document.getElementById('edit-moves-btn').addEventListener('click', () => openMoveModal(pokemon, teamIndex));
-                document.getElementById('nickname-input').addEventListener('input', (e) => updateTeamMember(teamIndex, { nickname: e.target.value || team[teamIndex].name }));
-                document.getElementById('held-item-select').addEventListener('change', (e) => updateTeamMember(teamIndex, { heldItem: e.target.value }));
-                document.getElementById('nature-select').addEventListener('change', (e) => updateTeamMember(teamIndex, { nature: e.target.value }));
-                document.getElementById('ability-select').addEventListener('change', (e) => updateTeamMember(teamIndex, { selectedAbility: e.target.value }));
-            }
-        }
-
-        function renderSelectedMoves(pokemon) {
-            if (pokemon.selectedMoves.length === 0) return '<p class="text-gray-500">No moves selected.</p>';
-            return pokemon.selectedMoves.map(move => `<div class="bg-gray-700 p-2 rounded capitalize">${move.name}</div>`).join('');
-        }
-
-        function renderAllAnalyses() {
-            const teamMembers = team.filter(p => p);
-            if (teamMembers.length === 0) {
-                teamAnalysisContent.innerHTML = '<p class="text-center text-gray-500">Add Pokémon to your team to analyse its battle coverage.</p>';
-                return;
-            }
-            const defensive = {};
-            Object.keys(TYPE_CHART).forEach(type => defensive[type] = { weak: 0, resist: 0, immune: 0 });
-            for (const member of teamMembers) {
-                Object.entries(TYPE_CHART).forEach(([attackingType]) => {
-                    let totalMultiplier = 1;
-                    for (const defendingType of member.types) {
-                        if (TYPE_CHART[defendingType].weak.includes(attackingType)) totalMultiplier *= 2;
-                        if (TYPE_CHART[defendingType].resist.includes(attackingType)) totalMultiplier *= 0.5;
-                        if (TYPE_CHART[defendingType].immune.includes(attackingType)) totalMultiplier *= 0;
-                    }
-                    if (totalMultiplier > 1) defensive[attackingType].weak++;
-                    if (totalMultiplier < 1 && totalMultiplier > 0) defensive[attackingType].resist++;
-                    if (totalMultiplier === 0) defensive[attackingType].immune++;
+                filteredPokemon.forEach(pokemon => {
+                    const card = document.createElement('div');
+                    card.className = 'pokemon-card p-2 rounded-lg text-center cursor-pointer';
+                    card.innerHTML = `<img src="${pokemon.sprite}" alt="${pokemon.name}" class="mx-auto w-16 h-16 image-rendering-pixelated"><p class="text-sm capitalize mt-1">${pokemon.name}</p>`;
+                    card.addEventListener('click', () => addPokemonToTeam(pokemon));
+                    pokemonList.appendChild(card);
                 });
             }
-            const defensiveHTML = `<div><h4 class="text-lg mb-2 text-center">Defensive Coverage</h4><div class="grid grid-cols-3 text-center mb-2 border-b border-gray-600 pb-1 text-xs"><span class="text-red-400">Weak To</span><span class="text-gray-400">Type</span><span class="text-green-400">Resists</span></div><div class="space-y-1 text-xs">${Object.keys(TYPE_CHART).map(type => `<div class="grid grid-cols-3 items-center"><div class="w-full bg-gray-700 rounded-full h-4"><div class="analysis-bar bg-red-600 h-4 rounded-full" style="width: ${defensive[type].weak / teamMembers.length * 100}%"></div></div><span class="type-badge ${type} mx-auto">${type}</span><div class="w-full bg-gray-700 rounded-full h-4"><div class="analysis-bar bg-green-600 h-4 rounded-full" style="width: ${(defensive[type].resist + defensive[type].immune) / teamMembers.length * 100}%"></div></div></div>`).join('')}</div></div>`;
-            const offensive = {};
-            Object.keys(TYPE_CHART).forEach(type => offensive[type] = 0);
-            for (const member of teamMembers) {
-                const superEffectiveTypes = new Set();
-                for (const move of member.selectedMoves) {
-                    Object.entries(TYPE_CHART).forEach(([defendingType, matchups]) => {
-                        if (matchups.weak.includes(move.type)) {
-                            superEffectiveTypes.add(defendingType);
+
+            function renderTeam() {
+                teamContainer.innerHTML = '';
+                team.forEach((pokemon, index) => {
+                    const slot = document.createElement('div');
+                    slot.className = 'team-slot relative p-4 rounded-lg flex flex-col items-center justify-center h-40 transition-all duration-200';
+                    if (pokemon) {
+                        slot.classList.add('pokemon-card', 'cursor-pointer');
+                        const itemSprite = pokemon.heldItem && pokemon.heldItem !== 'none' ? `<img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/${pokemon.heldItem}.png" class="absolute bottom-1 left-1 w-6 h-6 image-rendering-pixelated" alt="${pokemon.heldItem}" onerror="this.style.display='none'"/>` : '';
+                        slot.innerHTML = `<img src="${pokemon.sprite}" alt="${pokemon.name}" class="w-20 h-20 image-rendering-pixelated mb-2"><p class="text-md capitalize text-center">${pokemon.nickname}</p><button class="remove-btn absolute top-1 right-1 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold opacity-50 hover:opacity-100 transition-opacity">×</button>${itemSprite}`;
+                        slot.querySelector('.remove-btn').addEventListener('click', (e) => { e.stopPropagation(); removePokemonFromTeam(index); });
+                        slot.addEventListener('click', () => displayPokemonDetails(pokemon, index));
+                    } else {
+                        slot.classList.add('empty');
+                        slot.innerHTML = `<span class="text-4xl text-gray-600">+</span>`;
+                        slot.addEventListener('click', () => document.getElementById('pokemon-list-container').scrollIntoView({ behavior: 'smooth' }));
+                    }
+                    teamContainer.appendChild(slot);
+                });
+                saveTeamToStorage();
+                renderAllAnalyses();
+            }
+
+            function displayPokemonDetails(pokemon, teamIndex = -1) {
+                detailsPlaceholder.classList.add('hidden');
+                detailsContent.classList.remove('hidden');
+                const maxStatValue = 255;
+                const itemOptions = Object.entries(HELD_ITEMS).map(([name, value]) => `<option value="${value}" ${pokemon.heldItem === value ? 'selected' : ''}>${name}</option>`).join('');
+                const natureOptions = Object.keys(NATURES).map(name => `<option value="${name}" ${pokemon.nature === name ? 'selected' : ''}>${name}</option>`).join('');
+                const abilityOptions = pokemon.abilities.map(name => `<option value="${name}" ${pokemon.selectedAbility === name ? 'selected' : ''}>${name.charAt(0).toUpperCase() + name.slice(1)}</option>`).join('');
+                const selectedNature = NATURES[pokemon.nature];
+                const abilityDesc = abilityDataCache.get(pokemon.selectedAbility)?.description || 'No description.';
+                detailsContent.innerHTML = `
+                    <div class="text-center">
+                        <img src="${pokemon.sprite}" alt="${pokemon.name}" class="mx-auto w-24 h-24 image-rendering-pixelated">
+                        <input type="text" id="nickname-input" value="${pokemon.nickname}" class="w-full bg-transparent text-2xl capitalize font-bold mt-2 text-center border-b-2 border-gray-700 focus:border-yellow-400 focus:outline-none">
+                        <div class="flex justify-center gap-2 mt-2">${pokemon.types.map(type => `<span class="type-badge ${type}">${type}</span>`).join('')}</div>
+                    </div>
+                    <div class="mt-4"><h4 class="text-lg mb-2 text-xs">Ability</h4><select id="ability-select" class="w-full p-2 rounded bg-gray-800 border border-gray-600 text-xs focus:outline-none focus:ring-2 focus:ring-yellow-400">${abilityOptions}</select><p id="ability-description" class="text-xs text-gray-400 mt-1 h-10">${abilityDesc}</p></div>
+                    <div class="grid grid-cols-2 gap-4 mt-2">
+                        <div><h4 class="text-lg mb-2 text-xs">Held Item</h4><select id="held-item-select" class="w-full p-2 rounded bg-gray-800 border border-gray-600 text-xs focus:outline-none focus:ring-2 focus:ring-yellow-400">${itemOptions}</select></div>
+                        <div><h4 class="text-lg mb-2 text-xs">Nature</h4><select id="nature-select" class="w-full p-2 rounded bg-gray-800 border border-gray-600 text-xs focus:outline-none focus:ring-2 focus:ring-yellow-400">${natureOptions}</select></div>
+                    </div>
+                    <div class="mt-4"><h4 class="text-lg mb-2">Base Stats</h4>${pokemon.stats.map(stat => {
+                        let indicator = '';
+                        if (selectedNature.inc === stat.name) indicator = '<span class="stat-up"> ▲</span>';
+                        if (selectedNature.dec === stat.name) indicator = '<span class="stat-down"> ▼</span>';
+                        return `<div class="flex items-center mb-1 text-xs"><span class="w-1/3 capitalize">${stat.name.replace('special-', 'Sp. ')}${indicator}</span><div class="w-2/3 stat-bar-bg rounded-full h-4"><div class="stat-bar h-4 rounded-full flex items-center justify-end pr-2" style="width: ${(stat.base_stat / maxStatValue) * 100}%"><span class="text-black text-shadow-none font-sans font-bold">${stat.base_stat}</span></div></div></div>`
+                    }).join('')}</div>
+                    <div class="mt-4"><h4 class="text-lg mb-2">Moves</h4><div id="team-member-moves" class="grid grid-cols-1 gap-2 text-sm">${renderSelectedMoves(pokemon)}</div></div>
+                    ${teamIndex !== -1 ? `<button id="edit-moves-btn" class="w-full mt-4 text-md bg-yellow-500 text-black py-2 px-4 rounded hover:bg-yellow-400">Edit Moves</button>` : ''}`;
+                
+                if (teamIndex !== -1) {
+                    document.getElementById('edit-moves-btn').addEventListener('click', () => openMoveModal(pokemon, teamIndex));
+                    document.getElementById('nickname-input').addEventListener('input', (e) => {
+                        team[teamIndex].nickname = e.target.value || team[teamIndex].name;
+                        renderTeam();
+                    });
+                    document.getElementById('held-item-select').addEventListener('change', (e) => { team[teamIndex].heldItem = e.target.value; renderTeam(); });
+                    document.getElementById('nature-select').addEventListener('change', (e) => { team[teamIndex].nature = e.target.value; displayPokemonDetails(team[teamIndex], teamIndex); saveTeamToStorage(); });
+                    document.getElementById('ability-select').addEventListener('change', (e) => { team[teamIndex].selectedAbility = e.target.value; displayPokemonDetails(team[teamIndex], teamIndex); saveTeamToStorage(); });
+                }
+            }
+
+            function renderSelectedMoves(pokemon) {
+                if (pokemon.selectedMoves.length === 0) return '<p class="text-gray-500">No moves selected.</p>';
+                return pokemon.selectedMoves.map(move => `<div class="bg-gray-700 p-2 rounded capitalize">${move.name}</div>`).join('');
+            }
+
+            function renderAllAnalyses() {
+                const teamMembers = team.filter(p => p);
+                if (teamMembers.length === 0) {
+                    teamAnalysisContent.innerHTML = '<p class="text-center text-gray-500">Add Pokémon to your team to analyse its battle coverage.</p>';
+                    return;
+                }
+                const defensive = {};
+                Object.keys(TYPE_CHART).forEach(type => defensive[type] = { weak: 0, resist: 0, immune: 0 });
+                for (const member of teamMembers) {
+                    Object.entries(TYPE_CHART).forEach(([attackingType]) => {
+                        let totalMultiplier = 1;
+                        for (const defendingType of member.types) {
+                            if (TYPE_CHART[defendingType].weak.includes(attackingType)) totalMultiplier *= 2;
+                            if (TYPE_CHART[defendingType].resist.includes(attackingType)) totalMultiplier *= 0.5;
+                            if (TYPE_CHART[defendingType].immune.includes(attackingType)) totalMultiplier *= 0;
                         }
+                        if (totalMultiplier > 1) defensive[attackingType].weak++;
+                        if (totalMultiplier < 1 && totalMultiplier > 0) defensive[attackingType].resist++;
+                        if (totalMultiplier === 0) defensive[attackingType].immune++;
                     });
                 }
-                superEffectiveTypes.forEach(type => offensive[type]++);
+                const defensiveHTML = `<div><h4 class="text-lg mb-2 text-center">Defensive Coverage</h4><div class="grid grid-cols-3 text-center mb-2 border-b border-gray-600 pb-1 text-xs"><span class="text-red-400">Weak To</span><span class="text-gray-400">Type</span><span class="text-green-400">Resists</span></div><div class="space-y-1 text-xs">${Object.keys(TYPE_CHART).map(type => `<div class="grid grid-cols-3 items-center"><div class="w-full bg-gray-700 rounded-full h-4"><div class="analysis-bar bg-red-600 h-4 rounded-full" style="width: ${defensive[type].weak / teamMembers.length * 100}%"></div></div><span class="type-badge ${type} mx-auto">${type}</span><div class="w-full bg-gray-700 rounded-full h-4"><div class="analysis-bar bg-green-600 h-4 rounded-full" style="width: ${(defensive[type].resist + defensive[type].immune) / teamMembers.length * 100}%"></div></div></div>`).join('')}</div></div>`;
+                const offensive = {};
+                Object.keys(TYPE_CHART).forEach(type => offensive[type] = 0);
+                for (const member of teamMembers) {
+                    const superEffectiveTypes = new Set();
+                    for (const move of member.selectedMoves) {
+                        Object.entries(TYPE_CHART).forEach(([defendingType, matchups]) => {
+                            if (matchups.weak.includes(move.type)) {
+                                superEffectiveTypes.add(defendingType);
+                            }
+                        });
+                    }
+                    superEffectiveTypes.forEach(type => offensive[type]++);
+                }
+                const offensiveHTML = `<div><h4 class="text-lg mb-2 mt-4 text-center">Offensive Coverage</h4><p class="text-xs text-center text-gray-500 mb-2">Team members with super-effective moves</p><div class="space-y-1 text-xs">${Object.keys(TYPE_CHART).map(type => `<div class="grid grid-cols-3 items-center"><span class="type-badge ${type} mx-auto">${type}</span><div class="w-full col-span-2 bg-gray-700 rounded-full h-4"><div class="analysis-bar bg-blue-500 h-4 rounded-full text-right pr-2 text-black font-sans font-bold flex items-center justify-end" style="width: ${offensive[type] / teamMembers.length * 100}%">${offensive[type]}</div></div></div>`).join('')}</div></div>`;
+                teamAnalysisContent.innerHTML = defensiveHTML + offensiveHTML;
             }
-            const offensiveHTML = `<div><h4 class="text-lg mb-2 mt-4 text-center">Offensive Coverage</h4><p class="text-xs text-center text-gray-500 mb-2">Team members with super-effective moves</p><div class="space-y-1 text-xs">${Object.keys(TYPE_CHART).map(type => `<div class="grid grid-cols-3 items-center"><span class="type-badge ${type} mx-auto">${type}</span><div class="w-full col-span-2 bg-gray-700 rounded-full h-4"><div class="analysis-bar bg-blue-500 h-4 rounded-full text-right pr-2 text-black font-sans font-bold flex items-center justify-end" style="width: ${offensive[type] / teamMembers.length * 100}%">${offensive[type]}</div></div></div>`).join('')}</div></div>`;
-            teamAnalysisContent.innerHTML = defensiveHTML + offensiveHTML;
-        }
 
-        // --- TEAM LOGIC ---
-        function addPokemonToTeam(pokemon) {
-            const emptySlotIndex = team.findIndex(slot => slot === null);
-            if (emptySlotIndex !== -1) {
-                team[emptySlotIndex] = JSON.parse(JSON.stringify(pokemon));
-                saveTeamToFirestore();
-                showToast(`${pokemon.name.charAt(0).toUpperCase() + pokemon.name.slice(1)} added to team!`);
-            } else {
-                showToast("Your team is full!", 'error');
+            // --- TEAM LOGIC ---
+            function addPokemonToTeam(pokemon) {
+                const emptySlotIndex = team.findIndex(slot => slot === null);
+                if (emptySlotIndex !== -1) {
+                    team[emptySlotIndex] = JSON.parse(JSON.stringify(pokemon));
+                    renderTeam();
+                    displayPokemonDetails(team[emptySlotIndex], emptySlotIndex);
+                    showToast(`${pokemon.name.charAt(0).toUpperCase() + pokemon.name.slice(1)} added to team!`);
+                } else {
+                    showToast("Your team is full!", 'error');
+                }
             }
-        }
 
-        function removePokemonFromTeam(index) {
-            const removedPokemonName = team[index].nickname;
-            team[index] = null;
-            if (detailsContent.querySelector('#nickname-input')?.value === removedPokemonName) {
-                detailsContent.classList.add('hidden');
-                detailsPlaceholder.classList.remove('hidden');
+            function removePokemonFromTeam(index) {
+                const removedPokemonName = team[index].nickname;
+                team[index] = null;
+                renderTeam();
+                if (detailsContent.querySelector('#nickname-input')?.value === removedPokemonName) {
+                    detailsContent.classList.add('hidden');
+                    detailsPlaceholder.classList.remove('hidden');
+                }
             }
-            saveTeamToFirestore();
-        }
 
-        function updateTeamMember(index, updates) {
-            if (team[index]) {
-                Object.assign(team[index], updates);
-                // Re-render details immediately for responsive UI (e.g., nature change)
-                displayPokemonDetails(team[index], index);
-                saveTeamToFirestore();
-            }
-        }
-
-        // --- MOVE MODAL LOGIC ---
-        async function openMoveModal(pokemon, teamIndex) {
-            modalContent.innerHTML = `<div class="text-center text-xl">Loading moves...</div>`;
-            moveModal.classList.remove('hidden');
-            modalBackdrop.classList.add('opacity-100');
-            modalPanel.classList.add('scale-100');
-            const moveDetailsPromises = pokemon.moves.map(moveName => fetchMoveData(moveName));
-            const allMoveDetails = (await Promise.all(moveDetailsPromises)).filter(Boolean);
-            modalContent.innerHTML = `<h3 class="text-xl capitalize mb-4 text-center">Select Moves for ${pokemon.name}</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div><h4 class="text-lg mb-2">Available Moves</h4><input type="text" id="search-moves" placeholder="Search moves..." class="w-full p-2 mb-2 rounded bg-gray-800 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-yellow-400"><div id="available-moves" class="space-y-1 max-h-64 overflow-y-auto pr-2"></div></div><div><h4 class="text-lg mb-2">Selected Moves (${pokemon.selectedMoves.length} / 4)</h4><div id="current-selected-moves" class="space-y-2 min-h-[160px]"></div></div></div>`;
-            
-            const renderAvailable = () => {
-                const searchTerm = document.getElementById('search-moves').value.toLowerCase();
-                const availableMovesContainer = document.getElementById('available-moves');
-                const moves = allMoveDetails.filter(m => m.name.toLowerCase().includes(searchTerm));
-                availableMovesContainer.innerHTML = moves.map(move => {
-                    const isSelected = pokemon.selectedMoves.some(m => m.name === move.name);
-                    return `<button class="w-full p-2 rounded capitalize text-left text-sm flex justify-between ${isSelected ? 'bg-gray-600 text-gray-400 cursor-not-allowed' : 'bg-gray-700 hover:bg-gray-600'}" data-move-name="${move.name}" ${isSelected ? 'disabled' : ''}><span>${move.name}</span> <span class="type-badge ${move.type}">${move.damage_class.slice(0,3)}</span></button>`;
-                }).join('');
-                availableMovesContainer.querySelectorAll('button').forEach(btn => btn.addEventListener('click', () => selectMove(allMoveDetails.find(m => m.name === btn.dataset.moveName))));
-            };
-            
-            const renderSelected = () => {
-                const currentMovesContainer = document.getElementById('current-selected-moves');
-                currentMovesContainer.innerHTML = pokemon.selectedMoves.map(move => `<div class="bg-blue-800 p-2 rounded capitalize text-sm"><div class="flex justify-between items-center"><span>${move.name}</span><button class="text-red-300 hover:text-red-100 font-bold" data-move-name="${move.name}">×</button></div><div class="text-xs text-gray-300 mt-1 flex justify-between"><span class="type-badge ${move.type}">${move.type}</span><span>Pow: ${move.power || '--'}</span><span>Acc: ${move.accuracy || '--'}</span><span class="capitalize">${move.damage_class}</span></div></div>`).join('');
-                currentMovesContainer.querySelectorAll('button').forEach(btn => btn.addEventListener('click', () => deselectMove(btn.dataset.moveName)));
-            };
-            
-            const selectMove = (move) => { if (pokemon.selectedMoves.length < 4) { pokemon.selectedMoves.push(move); updateAndRerender(); } };
-            const deselectMove = (moveName) => { pokemon.selectedMoves = pokemon.selectedMoves.filter(m => m.name !== moveName); updateAndRerender(); };
-            
-            const updateAndRerender = () => {
-                team[teamIndex] = pokemon;
+            // --- MOVE MODAL LOGIC ---
+            async function openMoveModal(pokemon, teamIndex) {
+                modalContent.innerHTML = `<div class="text-center text-xl">Loading moves...</div>`;
+                moveModal.classList.remove('hidden');
+                modalBackdrop.classList.add('opacity-100');
+                modalPanel.classList.add('scale-100');
+                const moveDetailsPromises = pokemon.moves.map(moveName => fetchMoveData(moveName));
+                const allMoveDetails = (await Promise.all(moveDetailsPromises)).filter(Boolean);
+                modalContent.innerHTML = `<h3 class="text-xl capitalize mb-4 text-center">Select Moves for ${pokemon.name}</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div><h4 class="text-lg mb-2">Available Moves</h4><input type="text" id="search-moves" placeholder="Search moves..." class="w-full p-2 mb-2 rounded bg-gray-800 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-yellow-400"><div id="available-moves" class="space-y-1 max-h-64 overflow-y-auto pr-2"></div></div><div><h4 class="text-lg mb-2">Selected Moves (${pokemon.selectedMoves.length} / 4)</h4><div id="current-selected-moves" class="space-y-2 min-h-[160px]"></div></div></div>`;
+                
+                const renderAvailable = () => {
+                    const searchTerm = document.getElementById('search-moves').value.toLowerCase();
+                    const availableMovesContainer = document.getElementById('available-moves');
+                    const moves = allMoveDetails.filter(m => m.name.toLowerCase().includes(searchTerm));
+                    availableMovesContainer.innerHTML = moves.map(move => {
+                        const isSelected = pokemon.selectedMoves.some(m => m.name === move.name);
+                        return `<button class="w-full p-2 rounded capitalize text-left text-sm flex justify-between ${isSelected ? 'bg-gray-600 text-gray-400 cursor-not-allowed' : 'bg-gray-700 hover:bg-gray-600'}" data-move-name="${move.name}" ${isSelected ? 'disabled' : ''}><span>${move.name}</span> <span class="type-badge ${move.type}">${move.damage_class.slice(0,3)}</span></button>`;
+                    }).join('');
+                    availableMovesContainer.querySelectorAll('button').forEach(btn => btn.addEventListener('click', () => selectMove(allMoveDetails.find(m => m.name === btn.dataset.moveName))));
+                };
+                
+                const renderSelected = () => {
+                    const currentMovesContainer = document.getElementById('current-selected-moves');
+                    currentMovesContainer.innerHTML = pokemon.selectedMoves.map(move => `<div class="bg-blue-800 p-2 rounded capitalize text-sm"><div class="flex justify-between items-center"><span>${move.name}</span><button class="text-red-300 hover:text-red-100 font-bold" data-move-name="${move.name}">×</button></div><div class="text-xs text-gray-300 mt-1 flex justify-between"><span class="type-badge ${move.type}">${move.type}</span><span>Pow: ${move.power || '--'}</span><span>Acc: ${move.accuracy || '--'}</span><span class="capitalize">${move.damage_class}</span></div></div>`).join('');
+                    currentMovesContainer.querySelectorAll('button').forEach(btn => btn.addEventListener('click', () => deselectMove(btn.dataset.moveName)));
+                };
+                
+                const selectMove = (move) => { if (pokemon.selectedMoves.length < 4) { pokemon.selectedMoves.push(move); updateAndRerender(); } };
+                const deselectMove = (moveName) => { pokemon.selectedMoves = pokemon.selectedMoves.filter(m => m.name !== moveName); updateAndRerender(); };
+                
+                const updateAndRerender = () => { 
+                    team[teamIndex] = pokemon; 
+                    renderSelected(); 
+                    renderAvailable(); 
+                    displayPokemonDetails(pokemon, teamIndex); 
+                    renderAllAnalyses(); 
+                    saveTeamToStorage(); 
+                };
+                
+                document.getElementById('search-moves').addEventListener('input', renderAvailable);
                 renderSelected();
                 renderAvailable();
-                displayPokemonDetails(pokemon, teamIndex);
-                saveTeamToFirestore();
-            };
-            
-            document.getElementById('search-moves').addEventListener('input', renderAvailable);
-            renderSelected();
-            renderAvailable();
-        }
-
-        function closeModal() {
-            modalBackdrop.classList.remove('opacity-100');
-            modalPanel.classList.remove('scale-100');
-            setTimeout(() => moveModal.classList.add('hidden'), 300);
-        }
-
-        // --- FIRESTORE LOGIC ---
-        async function saveTeamToFirestore() {
-            if (!teamDocRef) {
-                console.warn("Firestore document reference not set. Cannot save team.");
-                return;
-            }
-            try {
-                // Use JSON.stringify for nested objects/arrays to ensure compatibility
-                const teamToSave = JSON.parse(JSON.stringify(team));
-                await setDoc(teamDocRef, { teamData: teamToSave, lastUpdated: serverTimestamp() });
-                console.log("Team saved to Firestore:", currentTeamId);
-            } catch (error) {
-                console.error("Error saving team to Firestore: ", error);
-            }
-        }
-
-        function setupTeamListener(teamId) {
-            if (!db) {
-                console.warn("Firestore not initialized. Skipping team listener setup.");
-                return;
-            }
-            // If there's an old listener, detach it first
-            if (unsubscribeTeamListener) {
-                unsubscribeTeamListener();
             }
 
-            currentTeamId = teamId;
-            teamIdDisplay.value = teamId;
-            teamDocRef = doc(db, `artifacts/${appId}/public/data/teams`, teamId);
+            function closeModal() {
+                modalBackdrop.classList.remove('opacity-100');
+                modalPanel.classList.remove('scale-100');
+                setTimeout(() => moveModal.classList.add('hidden'), 300);
+            }
 
-            unsubscribeTeamListener = onSnapshot(teamDocRef, (doc) => {
-                console.log("Received team update from Firestore for team:", teamId);
-                if (doc.exists()) {
-                    const firestoreTeam = doc.data().teamData;
-                    // Basic validation to ensure data structure matches
-                    if (Array.isArray(firestoreTeam) && firestoreTeam.length <= 6) {
-                        team = firestoreTeam;
-                    } else {
-                        // Handle corrupted data, maybe reset to a default
-                        team = Array(6).fill(null);
-                    }
-                } else {
-                    console.log("No such document! Creating a new one.");
-                    team = Array(6).fill(null);
-                    saveTeamToFirestore(); // Create the document in Firestore
+            // --- LOCAL STORAGE ---
+            function saveTeamToStorage() {
+                localStorage.setItem('pokemonEmeraldTeam', JSON.stringify(team));
+            }
+
+            function loadTeamFromStorage() {
+                const savedTeam = localStorage.getItem('pokemonEmeraldTeam');
+                if (savedTeam) {
+                    const parsedTeam = JSON.parse(savedTeam);
+                    // Add backward compatibility for teams saved before new properties were added
+                    team = parsedTeam.map(p => {
+                        if (p) {
+                            return {
+                                heldItem: 'none',
+                                nature: 'Hardy',
+                                selectedAbility: p.abilities ? p.abilities[0] : null,
+                                nickname: p.name,
+                                ...p, // Overwrite defaults with saved data
+                            };
+                        }
+                        return p;
+                    });
                 }
+            }
+            
+            // --- UI HELPERS ---
+            function showToast(message, type = 'success') {
+                toastMessage.textContent = message;
+                toast.className = `fixed bottom-5 right-5 text-white py-2 px-4 rounded-lg shadow-lg opacity-0 transform translate-y-2 toast ${type === 'success' ? 'bg-green-500' : 'bg-red-500'}`;
+                
+                // Animate in
+                setTimeout(() => {
+                    toast.classList.remove('opacity-0', 'translate-y-2');
+                    toast.classList.add('opacity-100', 'translate-y-0');
+                }, 10);
+
+                // Animate out
+                setTimeout(() => {
+                    toast.classList.remove('opacity-100', 'translate-y-0');
+                    toast.classList.add('opacity-0', 'translate-y-2');
+                }, 3000);
+            }
+
+            // --- EVENT LISTENERS ---
+            searchInput.addEventListener('input', renderPokemonList);
+            typeFilter.addEventListener('change', renderPokemonList);
+            closeModalBtn.addEventListener('click', closeModal);
+            modalBackdrop.addEventListener('click', closeModal);
+            clearTeamBtn.addEventListener('click', () => {
+                team.fill(null);
                 renderTeam();
-            }, (error) => {
-                console.error("Error with team listener:", error);
+                detailsContent.classList.add('hidden');
+                detailsPlaceholder.classList.remove('hidden');
+                showToast("Team cleared!", "success");
             });
-            
-            // Update URL without reloading page
-            const url = new URL(window.location);
-            url.searchParams.set('teamId', teamId);
-            window.history.pushState({}, '', url);
-        }
 
-        function loadTeamFromUrlOrNew() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const teamIdFromUrl = urlParams.get('teamId');
-
-            if (teamIdFromUrl) {
-                setupTeamListener(teamIdFromUrl);
-            } else {
-                // Create a new team ID
-                const newTeamId = doc(collection(db, `artifacts/${appId}/public/data/teams`)).id;
-                setupTeamListener(newTeamId);
-            }
-        }
-        
-        // --- UI HELPER ---
-        function showToast(message, type = 'success') {
-            toastMessage.textContent = message;
-            toast.className = `fixed bottom-5 right-5 text-white py-2 px-4 rounded-lg shadow-lg opacity-0 transform translate-y-2 toast ${type === 'success' ? 'bg-green-500' : 'bg-red-500'}`;
-            
-            // Animate in
-            setTimeout(() => {
-                toast.classList.remove('opacity-0', 'translate-y-2');
-                toast.classList.add('opacity-100', 'translate-y-0');
-            }, 10);
-
-            // Animate out
-            setTimeout(() => {
-                toast.classList.remove('opacity-100', 'translate-y-0');
-                toast.classList.add('opacity-0', 'translate-y-2');
-            }, 3000);
-        }
-
-        // --- EVENT LISTENERS ---
-        searchInput.addEventListener('input', renderPokemonList);
-        typeFilter.addEventListener('change', renderPokemonList);
-        closeModalBtn.addEventListener('click', closeModal);
-        modalBackdrop.addEventListener('click', closeModal);
-
-        copyLinkBtn.addEventListener('click', () => {
-            const url = new URL(window.location);
-            url.searchParams.set('teamId', currentTeamId);
-            navigator.clipboard.writeText(url.href).then(() => {
-                showToast('Share link copied to clipboard!');
-            }).catch(err => {
-                console.error('Failed to copy text: ', err);
-                showToast('Failed to copy link.', 'error');
-            });
+            // --- STARTUP ---
+            fetchGameData().then(initializeApp);
         });
-
-        newSessionBtn.addEventListener('click', () => {
-            const newTeamId = doc(collection(db, `artifacts/${appId}/public/data/teams`)).id;
-            setupTeamListener(newTeamId);
-            showToast('New team session created!');
-        });
-
-        loadTeamBtn.addEventListener('click', async () => {
-            const idToLoad = loadTeamIdInput.value.trim();
-            if (idToLoad) {
-                const docRef = doc(db, `artifacts/${appId}/public/data/teams`, idToLoad);
-                const docSnap = await getDoc(docRef);
-                if(docSnap.exists()){
-                    setupTeamListener(idToLoad);
-                    loadTeamIdInput.value = '';
-                    showToast(`Team ${idToLoad} loaded successfully!`);
-                } else {
-                    showToast(`Team ID "${idToLoad}" not found.`, 'error');
-                }
-            }
-        });
-        
-        clearTeamBtn.addEventListener('click', () => {
-            team.fill(null);
-            saveTeamToFirestore();
-            detailsContent.classList.add('hidden');
-            detailsPlaceholder.classList.remove('hidden');
-        });
-
-        // --- STARTUP ---
-        async function main() {
-            await fetchGameData();
-            await setupFirebase();
-            initializeApp();
-            loadTeamFromUrlOrNew();
-        }
-
-        main();
     </script>
 </body>
 </html>

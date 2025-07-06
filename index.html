@@ -59,10 +59,21 @@
         .toast {
             transition: opacity 0.3s, transform 0.3s;
         }
-        /* Styles for the mobile tab navigation */
         .mobile-tab.active {
             background-color: #fbbF24; /* yellow-400 */
             color: #161b22;
+        }
+        /* Styles for the move list accordion */
+        details > summary {
+            cursor: pointer;
+            padding: 0.5rem;
+            background-color: #2d3748;
+            border-radius: 0.25rem;
+            margin-bottom: 0.5rem;
+        }
+        details[open] > summary {
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
         }
     </style>
 </head>
@@ -97,7 +108,6 @@
 
         <!-- Main Content Grid -->
         <main id="main-content" class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            <!-- This container holds the three main sections for mobile view -->
             <div class="lg:col-span-8">
                  <div id="builder-view" class="view-panel">
                     <div id="pokemon-list-container" class="p-4 border-4 border-gray-700 rounded-lg bg-[#161b22]">
@@ -141,7 +151,7 @@
     <div id="move-modal" class="fixed inset-0 z-40 overflow-y-auto hidden">
         <div id="modal-backdrop" class="fixed inset-0 bg-black bg-opacity-75"></div>
         <div class="flex items-center justify-center min-h-screen p-4">
-            <div id="modal-panel" class="relative bg-[#0d1117] border-4 border-yellow-400 rounded-lg w-full max-w-3xl mx-auto p-6 transform scale-95">
+            <div id="modal-panel" class="relative bg-[#0d1117] border-4 border-yellow-400 rounded-lg w-full max-w-4xl mx-auto p-6 transform scale-95">
                 <div id="modal-content"></div>
                 <button id="close-modal-btn" class="absolute top-2 right-2 text-white bg-red-600 hover:bg-red-700 rounded-full w-8 h-8 flex items-center justify-center font-mono">×</button>
             </div>
@@ -181,12 +191,35 @@
                     const pokemonResults = await Promise.all(pokemonPromises);
                     const abilityUrls = new Set();
                     for (const data of pokemonResults) {
-                        const moves = data.moves.filter(move => move.version_group_details.some(d => ['ruby-sapphire', 'emerald', 'firered-leafgreen'].includes(d.version_group.name))).map(move => move.move.name);
+                        const moves = [];
+                        const seenMoves = new Set();
+                        data.moves.forEach(moveData => {
+                            const moveName = moveData.move.name;
+                            if (seenMoves.has(moveName)) return;
+
+                            const emeraldDetails = moveData.version_group_details.find(d => d.version_group.name === 'emerald');
+                            if (emeraldDetails) {
+                                seenMoves.add(moveName);
+                                moves.push({
+                                    name: moveName,
+                                    method: emeraldDetails.move_learn_method.name,
+                                    level: emeraldDetails.level_learned_at
+                                });
+                            }
+                        });
+                        
+                        moves.sort((a, b) => {
+                            if (a.method === 'level-up' && b.method === 'level-up') {
+                                return a.level - b.level;
+                            }
+                            return a.name.localeCompare(b.name);
+                        });
+
                         const abilities = data.abilities.map(a => {
                             abilityUrls.add(a.ability.url);
                             return a.ability.name;
                         });
-                        allPokemonData.push({ id: data.id, name: data.name, nickname: data.name, sprite: data.sprites.front_default, types: data.types.map(t => t.type.name), stats: data.stats.map(s => ({ name: s.stat.name, base_stat: s.base_stat })), abilities: abilities, selectedAbility: abilities[0], moves: [...new Set(moves)].sort(), selectedMoves: [], heldItem: 'none', nature: 'Hardy' });
+                        allPokemonData.push({ id: data.id, name: data.name, nickname: data.name, sprite: data.sprites.front_default, types: data.types.map(t => t.type.name), stats: data.stats.map(s => ({ name: s.stat.name, base_stat: s.base_stat })), abilities: abilities, selectedAbility: abilities[0], moves: moves, selectedMoves: [], heldItem: 'none', nature: 'Hardy' });
                     }
                     allPokemonData.sort((a, b) => a.id - b.id);
                     loadingProgress.textContent = `Fetching ${abilityUrls.size} ability details...`;
@@ -276,7 +309,6 @@
                         slot.querySelector('.remove-btn').addEventListener('click', (e) => { e.stopPropagation(); removePokemonFromTeam(index); });
                         slot.addEventListener('click', () => {
                             displayPokemonDetails(pokemon, index);
-                            // On mobile, switch to the details view
                             if (window.innerWidth < 1024) {
                                 switchView('details-view');
                             }
@@ -414,42 +446,88 @@
                 moveModal.classList.remove('hidden');
                 modalBackdrop.classList.add('opacity-100');
                 modalPanel.classList.add('scale-100');
-                const moveDetailsPromises = pokemon.moves.map(moveName => fetchMoveData(moveName));
-                const allMoveDetails = (await Promise.all(moveDetailsPromises)).filter(Boolean);
-                modalContent.innerHTML = `<h3 class="text-xl capitalize mb-4 text-center">Select Moves for ${pokemon.name}</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div><h4 class="text-lg mb-2">Available Moves</h4><input type="text" id="search-moves" placeholder="Search moves..." class="w-full p-2 mb-2 rounded bg-gray-800 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-yellow-400"><div id="available-moves" class="space-y-1 max-h-64 overflow-y-auto pr-2"></div></div><div><h4 class="text-lg mb-2">Selected Moves (${pokemon.selectedMoves.length} / 4)</h4><div id="current-selected-moves" class="space-y-2 min-h-[160px]"></div></div></div>`;
-                
-                const renderAvailable = () => {
-                    const searchTerm = document.getElementById('search-moves').value.toLowerCase();
-                    const availableMovesContainer = document.getElementById('available-moves');
-                    const moves = allMoveDetails.filter(m => m.name.toLowerCase().includes(searchTerm));
-                    availableMovesContainer.innerHTML = moves.map(move => {
+
+                const allMoveDetailsPromises = pokemon.moves.map(move => fetchMoveData(move.name));
+                const allMoveDetails = (await Promise.all(allMoveDetailsPromises)).filter(Boolean);
+
+                const getMoveDetails = (name) => allMoveDetails.find(m => m.name === name);
+
+                modalContent.innerHTML = `
+                    <h3 class="text-xl capitalize mb-4 text-center">Select Moves for ${pokemon.nickname}</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <h4 class="text-lg mb-2">Available Moves</h4>
+                            <div id="available-moves-container" class="space-y-2 max-h-96 overflow-y-auto pr-2"></div>
+                        </div>
+                        <div>
+                            <h4 class="text-lg mb-2">Selected Moves (<span id="selected-moves-count">${pokemon.selectedMoves.length}</span> / 4)</h4>
+                            <div id="current-selected-moves" class="space-y-2 min-h-[160px]"></div>
+                        </div>
+                    </div>`;
+
+                const renderMoveList = () => {
+                    const availableMovesContainer = document.getElementById('available-moves-container');
+                    
+                    const levelUpMoves = pokemon.moves.filter(m => m.method === 'level-up' && m.level > 0);
+                    const machineMoves = pokemon.moves.filter(m => m.method === 'machine');
+                    const tutorMoves = pokemon.moves.filter(m => m.method === 'tutor');
+
+                    const createMoveButton = (move) => {
+                        const details = getMoveDetails(move.name);
+                        if (!details) return '';
                         const isSelected = pokemon.selectedMoves.some(m => m.name === move.name);
-                        return `<button class="w-full p-2 rounded capitalize text-left text-sm flex justify-between ${isSelected ? 'bg-gray-600 text-gray-400 cursor-not-allowed' : 'bg-gray-700 hover:bg-gray-600'}" data-move-name="${move.name}" ${isSelected ? 'disabled' : ''}><span>${move.name}</span> <span class="type-badge ${move.type}">${move.damage_class.slice(0,3)}</span></button>`;
-                    }).join('');
-                    availableMovesContainer.querySelectorAll('button').forEach(btn => btn.addEventListener('click', () => selectMove(allMoveDetails.find(m => m.name === btn.dataset.moveName))));
+                        let levelInfo = '';
+                        if (move.method === 'level-up') {
+                            levelInfo = `<span class="text-xs text-gray-400 w-12 text-right">Lvl ${move.level}</span>`;
+                        }
+                        return `<button class="w-full p-2 rounded capitalize text-left text-sm flex justify-between items-center ${isSelected ? 'bg-gray-600 text-gray-400 cursor-not-allowed' : 'bg-gray-700 hover:bg-gray-600'}" data-move-name="${move.name}" ${isSelected ? 'disabled' : ''}>
+                                    <span class="flex-grow">${move.name}</span>
+                                    <span class="type-badge ${details.type} mx-2">${details.damage_class.slice(0,3)}</span>
+                                    ${levelInfo}
+                                </button>`;
+                    };
+                    
+                    availableMovesContainer.innerHTML = `
+                        <details open><summary>Level Up</summary><div class="space-y-1 p-2 bg-gray-800 rounded-b-md">${levelUpMoves.map(createMoveButton).join('') || '<p class="text-xs text-gray-500 p-2">None</p>'}</div></details>
+                        <details><summary>TM / HM</summary><div class="space-y-1 p-2 bg-gray-800 rounded-b-md">${machineMoves.map(createMoveButton).join('') || '<p class="text-xs text-gray-500 p-2">None</p>'}</div></details>
+                        <details><summary>Tutor</summary><div class="space-y-1 p-2 bg-gray-800 rounded-b-md">${tutorMoves.map(createMoveButton).join('') || '<p class="text-xs text-gray-500 p-2">None</p>'}</div></details>
+                    `;
+                    
+                    availableMovesContainer.querySelectorAll('button').forEach(btn => btn.addEventListener('click', () => selectMove(getMoveDetails(btn.dataset.moveName))));
                 };
-                
+
                 const renderSelected = () => {
                     const currentMovesContainer = document.getElementById('current-selected-moves');
-                    currentMovesContainer.innerHTML = pokemon.selectedMoves.map(move => `<div class="bg-blue-800 p-2 rounded capitalize text-sm"><div class="flex justify-between items-center"><span>${move.name}</span><button class="text-red-300 hover:text-red-100 font-bold" data-move-name="${move.name}">×</button></div><div class="text-xs text-gray-300 mt-1 flex justify-between"><span class="type-badge ${move.type}">${move.type}</span><span>Pow: ${move.power || '--'}</span><span>Acc: ${move.accuracy || '--'}</span><span class="capitalize">${move.damage_class}</span></div></div>`).join('');
+                    document.getElementById('selected-moves-count').textContent = pokemon.selectedMoves.length;
+                    currentMovesContainer.innerHTML = pokemon.selectedMoves.map(move => `
+                        <div class="bg-blue-800 p-2 rounded capitalize text-sm">
+                            <div class="flex justify-between items-center">
+                                <span>${move.name}</span>
+                                <button class="text-red-300 hover:text-red-100 font-bold" data-move-name="${move.name}">×</button>
+                            </div>
+                            <div class="text-xs text-gray-300 mt-1 flex justify-between">
+                                <span class="type-badge ${move.type}">${move.type}</span>
+                                <span>Pow: ${move.power || '--'}</span>
+                                <span>Acc: ${move.accuracy || '--'}</span>
+                                <span class="capitalize">${move.damage_class}</span>
+                            </div>
+                        </div>`).join('');
                     currentMovesContainer.querySelectorAll('button').forEach(btn => btn.addEventListener('click', () => deselectMove(btn.dataset.moveName)));
                 };
-                
+
                 const selectMove = (move) => { if (pokemon.selectedMoves.length < 4) { pokemon.selectedMoves.push(move); updateAndRerender(); } };
                 const deselectMove = (moveName) => { pokemon.selectedMoves = pokemon.selectedMoves.filter(m => m.name !== moveName); updateAndRerender(); };
-                
                 const updateAndRerender = () => { 
                     team[teamIndex] = pokemon; 
                     renderSelected(); 
-                    renderAvailable(); 
+                    renderMoveList(); 
                     displayPokemonDetails(pokemon, teamIndex); 
                     renderAllAnalyses(); 
                     saveTeamToStorage(); 
                 };
-                
-                document.getElementById('search-moves').addEventListener('input', renderAvailable);
+
                 renderSelected();
-                renderAvailable();
+                renderMoveList();
             }
 
             function closeModal() {
@@ -501,7 +579,7 @@
             function switchView(viewId) {
                 document.querySelectorAll('.view-panel').forEach(panel => {
                     panel.classList.add('hidden');
-                    panel.classList.remove('lg:block'); // Ensure lg:block is removed to hide it on mobile
+                    panel.classList.remove('lg:block');
                 });
                 document.getElementById(viewId).classList.remove('hidden');
 
@@ -518,7 +596,6 @@
                         switchView(tab.dataset.view);
                     });
                 });
-                // Set initial active tab
                 switchView('builder-view');
             }
 

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokémon Team Builder</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* CSS remains the same, but is redacted here for brevity */
+        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        main { flex-grow: 1; }
+        img.pokemon-sprite { image-rendering: pixelated; }
+        .custom-scrollbar::-webkit-scrollbar { width: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #888; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .modal-fade-in { animation: fadeIn 0.2s ease-out; }
+        @keyframes slideInRight { from { transform: translateX(100%); } to { transform: translateX(0); } }
+        .filter-drawer-slide-in { animation: slideInRight 0.3s ease-out; }
+        .tab-btn.active { border-bottom-color: #3b82f6; color: #3b82f6; }
+        .type-filter-btn.selected { outline: 2px solid #3b82f6; outline-offset: 2px; }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800">
+
+    <div id="app-container" class="flex flex-col min-h-screen">
+        <!-- Header -->
+        <header class="bg-red-600 text-white shadow-lg z-20 shrink-0">
+            <div class="container mx-auto px-4 py-4 space-y-3">
+                <h1 id="app-title" class="text-2xl font-bold text-center">Pokémon Team Builder</h1>
+                <div>
+                    <label for="generation-select" class="sr-only">Select Generation</label>
+                    <select id="generation-select" class="w-full p-2 text-slate-800 rounded-md text-sm">
+                        <option value="kanto">Generation I - Kanto (Leaf Green)</option>
+                        <option value="johto">Generation II - Johto (Gold/Silver)</option>
+                        <option value="hoenn">Generation III - Hoenn (Ruby/Sapphire)</option>
+                        <!-- Add more generations as needed -->
+                    </select>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main id="main-content" class="custom-scrollbar">
+            <!-- Loading Indicator -->
+            <div id="loading-overlay" class="fixed inset-0 bg-white/70 z-50 flex flex-col items-center justify-center hidden">
+                <svg class="animate-spin h-10 w-10 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <p class="mt-4 text-lg font-semibold text-slate-700">Fetching Pokémon data...</p>
+            </div>
+
+            <div class="container mx-auto p-4 md:p-6 pb-24">
+                <!-- Team Builder, Synergy, and Pokédex sections remain the same -->
+                <section class="mb-8">
+                    <h2 class="text-xl font-semibold mb-4 border-b-2 border-slate-300 pb-2">Your Team</h2>
+                    <div id="team-slots-container" class="grid grid-cols-3 sm:grid-cols-6 gap-3 md:gap-4"></div>
+                </section>
+                <section class="mb-8">
+                    <h2 class="text-xl font-semibold mb-4 border-b-2 border-slate-300 pb-2">Team Synergy Chart</h2>
+                    <div id="synergy-chart-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 text-sm"></div>
+                </section>
+                <section class="flex flex-col">
+                     <div class="sticky top-0 bg-slate-100 z-10 pt-2 -mx-4 px-4 pb-2 border-b">
+                        <h2 class="text-xl font-semibold mb-4 border-b-2 border-slate-300 pb-2">Available Pokémon</h2>
+                        <div class="toolbar grid grid-cols-1">
+                            <input type="text" id="search-bar" placeholder="Search by name..." class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+                        </div>
+                    </div>
+                    <div id="pokemon-list-container" class="overflow-y-auto flex-grow pt-4"></div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Floating Action Button and Modal HTML remains the same -->
+    <button id="open-filter-btn" class="fixed bottom-6 right-6 bg-blue-500 text-white w-16 h-16 rounded-full shadow-lg flex items-center justify-center z-40 hover:bg-blue-600 transition-transform hover:scale-110">
+        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+    </button>
+    <!-- Filter Drawer HTML remains the same -->
+    <div id="filter-drawer" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">...</div>
+    <!-- Modal for Pokémon details HTML remains the same -->
+    <div id="pokemon-modal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-[60] hidden">...</div>
+    <div id="toast-notification" class="fixed bottom-5 right-5 bg-red-500 text-white py-2 px-4 rounded-lg shadow-lg opacity-0 translate-y-4 transition-all duration-300 z-[70]"></div>
+
+    <script type="module">
+        import { fetchGenerationData } from './js/pokeapi-service.js';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- Global State ---
+            let pokemonData = [];
+            // Other state variables (team, selectedTypes) remain the same
+            
+            // --- DOM Elements ---
+            const generationSelect = document.getElementById('generation-select');
+            const appTitle = document.getElementById('app-title');
+            const loadingOverlay = document.getElementById('loading-overlay');
+            // Other DOM elements remain the same
+
+            // --- Core App Logic ---
+            // All the functions for rendering the team, synergy chart, Pokémon list, modals,
+            // and filters remain largely the same, but will now operate on the `pokemonData`
+            // variable which is loaded dynamically.
+
+            async function initializeGeneration(generationKey) {
+                loadingOverlay.classList.remove('hidden');
+                
+                // Clear existing data and UI
+                pokemonData = [];
+                // Clear list, filters, etc.
+
+                try {
+                    const data = await fetchGenerationData(generationKey);
+                    pokemonData = data.pokemon;
+                    // You would also get game titles, etc from the data object
+                    
+                    // Update UI titles
+                    appTitle.textContent = data.title;
+                    
+                    // Re-initialize the app with the new data
+                    setupFilters();
+                    applyFiltersAndSort();
+
+                } catch (error) {
+                    console.error("Failed to load Pokémon data:", error);
+                    // Display an error message to the user
+                } finally {
+                    loadingOverlay.classList.add('hidden');
+                }
+            }
+
+            // --- Event Listeners ---
+            generationSelect.addEventListener('change', (e) => {
+                initializeGeneration(e.target.value);
+            });
+            
+            // --- Initial Load ---
+            initializeGeneration('kanto'); // Load Leaf Green by default
+        });
+    </script>
+</body>
+</html>

@@ -79,10 +79,56 @@
     <button id="open-filter-btn" class="fixed bottom-6 right-6 bg-blue-500 text-white w-16 h-16 rounded-full shadow-lg flex items-center justify-center z-40 hover:bg-blue-600 transition-transform hover:scale-110">
         <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
     </button>
-    <!-- Filter Drawer HTML remains the same -->
-    <div id="filter-drawer" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">...</div>
-    <!-- Modal for Pokémon details HTML remains the same -->
-    <div id="pokemon-modal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-[60] hidden">...</div>
+   
+    <!-- Filter Drawer -->
+    <div id="filter-drawer" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+        <div id="filter-drawer-content" class="absolute right-0 top-0 h-full w-full max-w-sm bg-white shadow-2xl flex flex-col filter-drawer-slide-in">
+            <div class="p-4 border-b shrink-0 space-y-4">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-xl font-bold">Filter & Sort</h3>
+                     <button id="close-filter-btn" class="p-1 rounded-full hover:bg-slate-200">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                </div>
+                 <button id="reset-filters-btn" class="w-full bg-slate-200 text-slate-700 py-2.5 px-4 rounded-lg font-semibold hover:bg-slate-300 transition flex items-center justify-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                    Clear Filters
+                </button>
+            </div>
+            <div id="filter-scroll-area" class="p-4 overflow-y-auto custom-scrollbar flex-grow space-y-6">
+                <div>
+                    <label class="font-semibold block mb-2">Sort by:</label>
+                    <select id="sort-select" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-sm">
+                        <option value="id">Pokédex Number</option>
+                        <option value="alphabetical">Alphabetical (A-Z)</option>
+                        <option value="hp">HP</option> <option value="atk">Attack</option> <option value="def">Defense</option>
+                        <option value="spa">Sp. Atk</option> <option value="spd">Sp. Def</option> <option value="spe">Speed</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="font-semibold block mb-2">Filter by Type:</label>
+                    <div id="type-filter-container" class="grid grid-cols-4 gap-2"></div>
+                </div>
+                <div>
+                    <label for="ability-filter" class="font-semibold block mb-2">Filter by Ability:</label>
+                    <select id="ability-filter" class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-sm">
+                        <option value="">All Abilities</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="location-filter" class="font-semibold block mb-2">Filter by Location:</label>
+                    <input type="text" id="location-filter" list="location-list" placeholder="Type to search locations..." class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-sm">
+                    <datalist id="location-list"></datalist>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal for Pokémon details -->
+    <div id="pokemon-modal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-[60] hidden">
+        <div id="modal-content" class="bg-white rounded-xl shadow-2xl w-full max-w-md modal-fade-in max-h-[90vh] flex flex-col"></div>
+    </div>
+
     <div id="toast-notification" class="fixed bottom-5 right-5 bg-red-500 text-white py-2 px-4 rounded-lg shadow-lg opacity-0 translate-y-4 transition-all duration-300 z-[70]"></div>
 
     <script type="module">

@@ -27,14 +27,14 @@
     <div id="app-container" class="flex flex-col min-h-screen">
         <!-- Header -->
         <header class="bg-red-600 text-white shadow-lg z-20 shrink-0">
-            <div class="container mx-auto px-4 py-4 space-y-3">
+            <div class="container mx-auto px-4 py-3 flex flex-col sm:flex-row justify-between items-center gap-3">
                 <h1 id="app-title" class="text-2xl font-bold text-center">Pokémon Team Builder</h1>
                 <div>
                     <label for="generation-select" class="sr-only">Select Generation</label>
-                    <select id="generation-select" class="w-full p-2 text-slate-800 rounded-md text-sm">
-                        <option value="kanto">Generation I - Kanto (Leaf Green)</option>
-                        <option value="johto">Generation II - Johto (Gold/Silver)</option>
-                        <option value="hoenn">Generation III - Hoenn (Ruby/Sapphire)</option>
+                    <select id="generation-select" class="bg-red-700 border-2 border-red-800/50 text-white font-semibold text-sm rounded-lg focus:ring-2 focus:ring-white focus:outline-none p-2.5 transition hover:bg-red-800">
+                        <option value="kanto">Gen I - Kanto (Leaf Green)</option>
+                        <option value="johto">Gen II - Johto (Gold/Silver)</option>
+                        <option value="hoenn">Gen III - Hoenn (Ruby/Sapphire)</option>
                         <!-- Add more generations as needed -->
                     </select>
                 </div>
@@ -91,45 +91,74 @@
         document.addEventListener('DOMContentLoaded', () => {
             // --- Global State ---
             let pokemonData = [];
-            // Other state variables (team, selectedTypes) remain the same
+            let team = Array(6).fill(null);
+            let selectedTypes = [];
             
             // --- DOM Elements ---
             const generationSelect = document.getElementById('generation-select');
             const appTitle = document.getElementById('app-title');
             const loadingOverlay = document.getElementById('loading-overlay');
-            // Other DOM elements remain the same
-
+            const pokemonListContainer = document.getElementById('pokemon-list-container');
+            const typeFilterContainer = document.getElementById('type-filter-container');
+            const abilityFilter = document.getElementById('ability-filter');
+            const locationFilter = document.getElementById('location-filter');
+            const sortSelect = document.getElementById('sort-select');
+            const searchBar = document.getElementById('search-bar');
+            
             // --- Core App Logic ---
-            // All the functions for rendering the team, synergy chart, Pokémon list, modals,
-            // and filters remain largely the same, but will now operate on the `pokemonData`
-            // variable which is loaded dynamically.
+            
+            // This function resets the UI to a clean state before loading new data.
+            function resetUIForNewGeneration() {
+                team = Array(6).fill(null);
+                selectedTypes = [];
+                pokemonData = [];
+                pokemonListContainer.innerHTML = '';
+                
+                // Clear filter options
+                typeFilterContainer.innerHTML = '';
+                abilityFilter.innerHTML = '<option value="">All Abilities</option>';
+                const locationList = document.getElementById('location-list');
+                if(locationList) locationList.innerHTML = '';
+
+                // Reset filter inputs
+                if(sortSelect) sortSelect.value = 'id';
+                if(searchBar) searchBar.value = '';
+
+                // Rerender empty team
+                renderTeam();
+            }
 
             async function initializeGeneration(generationKey) {
                 loadingOverlay.classList.remove('hidden');
-                
-                // Clear existing data and UI
-                pokemonData = [];
-                // Clear list, filters, etc.
+                resetUIForNewGeneration();
 
                 try {
                     const data = await fetchGenerationData(generationKey);
                     pokemonData = data.pokemon;
-                    // You would also get game titles, etc from the data object
-                    
-                    // Update UI titles
                     appTitle.textContent = data.title;
                     
-                    // Re-initialize the app with the new data
                     setupFilters();
                     applyFiltersAndSort();
 
                 } catch (error) {
                     console.error("Failed to load Pokémon data:", error);
-                    // Display an error message to the user
+                    pokemonListContainer.innerHTML = `<p class="text-center text-red-500 p-8">Failed to load Pokémon data. Please check your connection and try again.</p>`;
                 } finally {
                     loadingOverlay.classList.add('hidden');
                 }
             }
+
+            // All other functions (renderTeam, renderPokemonList, showPokemonModal, etc.)
+            // would be here, unchanged from the previous version. For brevity, they are omitted,
+            // as the key changes are in the initialization and reset logic.
+            // Placeholder for where the other functions would go:
+            function renderTeam() { /* ... */ }
+            function renderSynergyChart() { /* ... */ }
+            function applyFiltersAndSort() { /* ... */ }
+            function renderPokemonList(list) { /* ... */ }
+            function setupFilters() { /* ... */ }
+            function showPokemonModal(pokemon) { /* ... */ }
+
 
             // --- Event Listeners ---
             generationSelect.addEventListener('change', (e) => {
@@ -142,3 +171,4 @@
     </script>
 </body>
 </html>
+

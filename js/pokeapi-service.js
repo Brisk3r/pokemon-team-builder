@@ -1,93 +1,112 @@
-// This module is responsible for all communication with the PokéAPI.
+// Base URL for the PokéAPI
+const POKEAPI_BASE_URL = 'https://pokeapi.co/api/v2/';
 
-const API_BASE_URL = 'https://pokeapi.co/api/v2';
-
-// Caching to avoid re-fetching data on every click
-const cache = new Map();
-
-// Configuration for each generation
-const GENERATION_CONFIG = {
-    kanto: {
-        title: 'Pokémon Leaf Green Team Builder',
-        pokedexLimit: 151,
-        pokedexOffset: 0,
-        gameVersionForLocations: 'leafgreen'
-    },
-    johto: {
-        title: 'Pokémon Gold/Silver Team Builder',
-        pokedexLimit: 100,
-        pokedexOffset: 151,
-        gameVersionForLocations: 'gold'
-    },
-    hoenn: {
-        title: 'Pokémon Ruby/Sapphire Team Builder',
-        pokedexLimit: 135,
-        pokedexOffset: 251,
-        gameVersionForLocations: 'ruby'
-    }
+// Defines the Pokémon ID ranges for each generation
+const GENERATION_RANGES = {
+    kanto: { limit: 151, offset: 0, title: "Pokémon Leaf Green Builder" },
+    johto: { limit: 100, offset: 151, title: "Pokémon Gold/Silver Builder" },
+    hoenn: { limit: 135, offset: 251, title: "Pokémon Ruby/Sapphire Builder" },
 };
 
 /**
- * Fetches and transforms all necessary data for a given generation.
- * @param {string} generationKey - e.g., 'kanto', 'johto'
- * @returns {Promise<Object>} An object containing the title and the formatted Pokémon data.
+ * Transforms the raw data from the PokéAPI into a simplified format our app can use.
+ * @param {object} rawData - The raw data object for a single Pokémon from PokéAPI.
+ * @returns {object} A simplified Pokémon object.
  */
-export async function fetchGenerationData(generationKey) {
-    if (cache.has(generationKey)) {
-        return cache.get(generationKey);
-    }
+function transformPokemonData(rawData) {
+    // Helper to extract stat values safely
+    const getStat = (name) => rawData.stats.find(s => s.stat.name === name)?.base_stat || 0;
 
-    const config = GENERATION_CONFIG[generationKey];
-    if (!config) throw new Error(`Invalid generation key: ${generationKey}`);
-
-    // 1. Fetch the list of Pokémon for the generation
-    const pokedexUrl = `${API_BASE_URL}/pokemon?limit=${config.pokedexLimit}&offset=${config.pokedexOffset}`;
-    const pokedexResponse = await fetch(pokedexUrl);
-    const pokedexData = await pokedexResponse.json();
-
-    // 2. Fetch detailed data for each Pokémon in parallel
-    const pokemonPromises = pokedexData.results.map(p => fetch(p.url).then(res => res.json()));
-    const detailedPokemonData = await Promise.all(pokemonPromises);
-
-    // 3. Transform the raw API data into our app's format
-    const transformedPokemon = detailedPokemonData.map(p => transformPokemonData(p, config.gameVersionForLocations));
-    
-    const result = {
-        title: config.title,
-        pokemon: transformedPokemon
+    return {
+        id: rawData.id,
+        name: rawData.name,
+        types: rawData.types.map(t => t.type.name),
+        abilities: rawData.abilities.map(a => a.ability.name),
+        stats: {
+            hp: getStat('hp'),
+            atk: getStat('attack'),
+            def: getStat('defense'),
+            spa: getStat('special-attack'),
+            spd: getStat('special-defense'),
+            spe: getStat('speed'),
+        },
+        // Note: Location and evolution data are not provided by this basic API call
+        // and would require more complex fetching from other endpoints (species, encounters).
+        // For this version, we will leave them blank.
+        locations: [], 
+        evolvesTo: null,
+        evoMethod: null,
     };
-    
-    cache.set(generationKey, result); // Save to cache
-    return result;
 }
 
 /**
- * Transforms a single Pokémon's raw API data into the simple format our app uses.
- * @param {Object} apiPokemon - The raw data object from PokéAPI.
- * @param {string} gameVersion - The game version to check for locations (e.g., 'leafgreen').
- * @returns {Object} A simplified Pokémon object for our app.
+ * Fetches detailed data for a single Pokémon.
+ * @param {string} url - The URL of the Pokémon resource.
+ * @returns {Promise<object|null>} A promise that resolves to the simplified Pokémon data, or null on error.
  */
-function transformPokemonData(apiPokemon, gameVersion) {
-    // This is a simplified transformation. A real implementation would need
-    // to fetch evolution chain data from p.species.url, which is another API call.
-    // For simplicity, we'll leave evolution data static for now.
-    
-    return {
-        id: apiPokemon.id,
-        name: apiPokemon.name,
-        type1: apiPokemon.types[0]?.type.name,
-        type2: apiPokemon.types[1]?.type.name || null,
-        locations: [], // Location data from the API is complex and would need its own function
-        abilities: apiPokemon.abilities.map(a => a.ability.name),
-        stats: {
-            hp: apiPokemon.stats.find(s => s.stat.name === 'hp').base_stat,
-            atk: apiPokemon.stats.find(s => s.stat.name === 'attack').base_stat,
-            def: apiPokemon.stats.find(s => s.stat.name === 'defense').base_stat,
-            spa: apiPokemon.stats.find(s => s.stat.name === 'special-attack').base_stat,
-            spd: apiPokemon.stats.find(s => s.stat.name === 'special-defense').base_stat,
-            spe: apiPokemon.stats.find(s => s.stat.name === 'speed').base_stat
-        },
-        evolvesTo: null, // This would require fetching from the species endpoint
-        evoMethod: null
-    };
+async function fetchPokemonDetails(url) {
+    try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const rawData = await response.json();
+        return transformPokemonData(rawData);
+    } catch (error) {
+        console.error(`Failed to fetch details from ${url}:`, error);
+        return null; // Return null for failed requests
+    }
 }
+
+/**
+ * Main function to fetch all Pokémon data for a selected generation.
+ * It caches the results in sessionStorage to speed up subsequent loads.
+ * @param {string} generationKey - The key for the generation (e.g., 'kanto').
+ * @returns {Promise<{title: string, pokemon: object[]}>} A promise that resolves to an object containing the title and Pokémon list.
+ */
+export async function fetchGenerationData(generationKey) {
+    const cacheKey = `pokemon-data-${generationKey}`;
+    const cachedData = sessionStorage.getItem(cacheKey);
+
+    // If we have cached data, parse and return it immediately
+    if (cachedData) {
+        console.log(`Loading ${generationKey} data from cache.`);
+        return JSON.parse(cachedData);
+    }
+
+    console.log(`Fetching new ${generationKey} data from PokéAPI.`);
+    const generationInfo = GENERATION_RANGES[generationKey];
+    if (!generationInfo) {
+        throw new Error(`Invalid generation key: ${generationKey}`);
+    }
+
+    try {
+        // 1. Fetch the list of Pokémon for the generation
+        const listResponse = await fetch(`${POKEAPI_BASE_URL}pokemon?limit=${generationInfo.limit}&offset=${generationInfo.offset}`);
+        if (!listResponse.ok) throw new Error('Failed to fetch Pokémon list.');
+        const pokemonList = await listResponse.json();
+
+        // 2. Create an array of promises to fetch details for each Pokémon in parallel
+        const detailPromises = pokemonList.results.map(pokemon => fetchPokemonDetails(pokemon.url));
+
+        // 3. Wait for all detail fetches to complete
+        const resolvedDetails = await Promise.all(detailPromises);
+        
+        // 4. Filter out any null results from failed fetches
+        const pokemon = resolvedDetails.filter(p => p !== null);
+
+        // 5. Prepare the final data object
+        const finalData = {
+            title: generationInfo.title,
+            pokemon: pokemon,
+        };
+
+        // 6. Cache the new data in sessionStorage before returning
+        sessionStorage.setItem(cacheKey, JSON.stringify(finalData));
+
+        return finalData;
+
+    } catch (error) {
+        console.error(`Could not fetch data for generation ${generationKey}:`, error);
+        throw error; // Re-throw the error to be handled by the caller
+    }
+}
+

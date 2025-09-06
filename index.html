@@ -29,6 +29,7 @@
         .tab-btn.active { border-bottom-color: #3b82f6; color: #3b82f6; }
         .type-filter-btn.selected { outline: 2px solid #3b82f6; outline-offset: 2px; }
         .stat-bar { transition: width 0.5s ease-in-out; }
+        .move-table th, .move-table td { padding: 0.5rem 0.25rem; }
     </style>
 </head>
 <body class="bg-slate-100 text-slate-800">
@@ -42,8 +43,7 @@
                     <label for="generation-select" class="sr-only">Select Generation</label>
                     <select id="generation-select" class="bg-red-700 border-2 border-red-800/50 text-white font-semibold text-sm rounded-lg focus:ring-2 focus:ring-white focus:outline-none p-2.5 transition hover:bg-red-800">
                         <option value="kanto">Gen I - Kanto (Leaf Green)</option>
-                        <option value="johto">Gen II - Johto (Gold/Silver)</option>
-                        <option value="hoenn">Gen III - Hoenn (Ruby/Sapphire)</option>
+                        <!-- Future generations will be added here -->
                     </select>
                 </div>
             </div>
@@ -57,7 +57,7 @@
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                <p class="mt-4 text-lg font-semibold text-slate-700">Fetching Pokémon data...</p>
+                <p class="mt-4 text-lg font-semibold text-slate-700">Loading Pokémon data...</p>
             </div>
             <div class="container mx-auto p-4 md:p-6 pb-24">
                 <section class="mb-8">
@@ -121,6 +121,11 @@
                         <option value="">All Abilities</option>
                     </select>
                 </div>
+                <div>
+                    <label for="location-filter" class="font-semibold block mb-2">Filter by Location:</label>
+                    <input type="text" id="location-filter" list="location-list" placeholder="Type to search locations..." class="w-full p-3 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-sm">
+                    <datalist id="location-list"></datalist>
+                </div>
             </div>
         </div>
     </div>
@@ -137,9 +142,11 @@
         
         document.addEventListener('DOMContentLoaded', () => {
             let pokemonData = [];
+            let abilitiesData = [];
+            let locationsData = [];
             let team = Array(6).fill(null);
             let selectedTypes = [];
-            const typeColors = { Normal: '#A8A77A', Fire: '#EE8130', Water: '#6390F0', Electric: '#F7D02C', Grass: '#7AC74C', Ice: '#96D9D6', Fighting: '#C22E28', Poison: '#A33EA1', Ground: '#E2BF65', Flying: '#A98FF3', Psychic: '#F95587', Bug: '#A6B91A', Rock: '#B6A136', Ghost: '#735797', Dragon: '#6F35FC', Steel: '#B7B7CE', };
+            const typeColors = { normal: '#A8A77A', fire: '#EE8130', water: '#6390F0', electric: '#F7D02C', grass: '#7AC74C', ice: '#96D9D6', fighting: '#C22E28', poison: '#A33EA1', ground: '#E2BF65', flying: '#A98FF3', psychic: '#F95587', bug: '#A6B91A', rock: '#B6A136', ghost: '#735797', dragon: '#6F35FC', steel: '#B7B7CE', };
             const natureData = [ { name: 'Hardy', increases: null, decreases: null }, { name: 'Lonely', increases: 'atk', decreases: 'def' }, { name: 'Brave', increases: 'atk', decreases: 'spe' }, { name: 'Adamant', increases: 'atk', decreases: 'spa' }, { name: 'Naughty', increases: 'atk', decreases: 'spd' }, { name: 'Bold', increases: 'def', decreases: 'atk' }, { name: 'Docile', increases: null, decreases: null }, { name: 'Relaxed', increases: 'def', decreases: 'spe' }, { name: 'Impish', increases: 'def', decreases: 'spa' }, { name: 'Lax', increases: 'def', decreases: 'spd' }, { name: 'Timid', increases: 'spe', decreases: 'atk' }, { name: 'Hasty', increases: 'spe', decreases: 'def' }, { name: 'Serious', increases: null, decreases: null }, { name: 'Jolly', increases: 'spe', decreases: 'spa' }, { name: 'Naive', increases: 'spe', decreases: 'spd' }, { name: 'Modest', increases: 'spa', decreases: 'atk' }, { name: 'Mild', increases: 'spa', decreases: 'def' }, { name: 'Quiet', increases: 'spa', decreases: 'spe' }, { name: 'Bashful', increases: null, decreases: null }, { name: 'Rash', increases: 'spa', decreases: 'spd' }, { name: 'Calm', increases: 'spd', decreases: 'atk' }, { name: 'Gentle', increases: 'spd', decreases: 'def' }, { name: 'Sassy', increases: 'spd', decreases: 'spe' }, { name: 'Careful', increases: 'spd', decreases: 'spa' }, { name: 'Quirky', increases: null, decreases: null } ];
 
             const generationSelect = document.getElementById('generation-select');
@@ -150,6 +157,7 @@
             const pokemonListContainer = document.getElementById('pokemon-list-container');
             const typeFilterContainer = document.getElementById('type-filter-container');
             const abilityFilter = document.getElementById('ability-filter');
+            const locationFilter = document.getElementById('location-filter');
             const sortSelect = document.getElementById('sort-select');
             const searchBar = document.getElementById('search-bar');
             const modal = document.getElementById('pokemon-modal');
@@ -187,19 +195,21 @@
             }
 
             function renderSynergyChart() {
-                synergyChartContainer.innerHTML = '<p class="text-slate-500 col-span-full text-center">Synergy chart feature is in development.</p>';
+                synergyChartContainer.innerHTML = '<p class="text-slate-500 col-span-full text-center">Synergy chart will be displayed here.</p>';
             }
             
             function applyFiltersAndSort() {
                 const nameFilter = searchBar.value.toLowerCase();
                 const ability = abilityFilter.value;
+                const location = locationFilter.value;
                 const sortBy = sortSelect.value;
                 
                 let processedList = [...pokemonData].filter(p => {
                     const nameMatch = p.name.toLowerCase().includes(nameFilter);
                     const typeMatch = selectedTypes.length === 0 || selectedTypes.some(t => p.types.includes(t));
-                    const abilityMatch = !ability || p.abilities.includes(ability);
-                    return nameMatch && typeMatch && abilityMatch;
+                    const abilityMatch = !ability || p.abilities.some(a => a.name === ability);
+                    const locationMatch = !location || (p.locations && p.locations.some(l => l.name === location));
+                    return nameMatch && typeMatch && abilityMatch && locationMatch;
                 });
 
                 switch (sortBy) {
@@ -225,9 +235,12 @@
                 pokemonListContainer.appendChild(cardGrid);
             }
             
-            function setupFilters() {
-                const allAbilities = [...new Set(pokemonData.flatMap(p => p.abilities))].sort();
-                abilityFilter.innerHTML = '<option value="">All Abilities</option>' + allAbilities.map(a => `<option value="${a}">${a}</option>`).join('');
+            function setupFilters(data) {
+                abilitiesData = data.abilities;
+                locationsData = data.locations;
+
+                abilityFilter.innerHTML = '<option value="">All Abilities</option>' + abilitiesData.map(a => `<option value="${a.name}">${a.name.replace(/-/g, ' ')}</option>`).join('');
+                document.getElementById('location-list').innerHTML = locationsData.map(l => `<option value="${l}"></option>`).join('');
                 
                 typeFilterContainer.innerHTML = '';
                 Object.keys(typeColors).forEach(type => {
@@ -247,16 +260,36 @@
 
             function showPokemonModal(pokemon) {
                 const natureOptions = natureData.map(n => `<option value="${n.name}">${n.name}</option>`).join('');
-                const statRows = Object.entries(pokemon.stats).map(([key, value]) => `<div class="grid grid-cols-5 items-center gap-2 text-sm"><span class="font-semibold uppercase col-span-1">${key}</span><div class="stat-bar-bg rounded-full h-2.5 col-span-3"><div id="stat-bar-${key}" class="stat-bar h-2.5 rounded-full ${getStatColor(value)}" style="width: ${(value / 255) * 100}%"></div></div><span id="stat-value-${key}" class="text-right col-span-1 font-bold">${value}</span></div>`).join('');
+                const abilitiesHtml = pokemon.abilities.map(ability => {
+                    const abilityInfo = abilitiesData.find(a => a.name === ability.name);
+                    return `<div class="mb-2"><h5 class="font-semibold capitalize">${ability.name.replace(/-/g, ' ')} ${ability.is_hidden ? '(Hidden)' : ''}</h5><p class="text-sm text-slate-600">${abilityInfo ? abilityInfo.description : 'No description available.'}</p></div>`;
+                }).join('');
+                const locationsList = pokemon.locations.length > 0 ? pokemon.locations.map(loc => `<li class="py-1 capitalize">${loc.name} (${loc.method}) - ${loc.chance}% chance</li>`).join('') : '<li class="py-1 text-slate-500">Not found in the wild in this game.</li>';
+                const statRows = Object.entries(pokemon.stats).map(([key, value]) => `<div class="grid grid-cols-5 items-center gap-2 text-sm"><span class="font-semibold uppercase col-span-1">${key}</span><div class="bg-slate-200 rounded-full h-2.5 col-span-3"><div id="stat-bar-${key}" class="stat-bar h-2.5 rounded-full ${getStatColor(value)}" style="width: ${(value / 255) * 100}%"></div></div><span id="stat-value-${key}" class="text-right col-span-1 font-bold">${value}</span></div>`).join('');
                 
-                modalContent.innerHTML = `<div class="p-4 text-center border-b"><img src="${getSpriteUrl(pokemon.id)}" alt="${pokemon.name}" class="pokemon-sprite w-24 h-24 mx-auto -mt-16 bg-slate-100 border-4 border-white rounded-full shadow-lg"><h3 class="text-2xl font-bold mt-3 capitalize">${pokemon.name}</h3><div class="flex justify-center gap-2 my-2">${pokemon.types.map(t => getTypeBadge(t)).join('')}</div></div><div class="p-4 overflow-y-auto custom-scrollbar flex-grow"><div class="space-y-3"><div><h4 class="font-semibold text-md mb-2">Base Stats</h4><div class="space-y-2">${statRows}</div><div class="mt-3"><label for="nature-select" class="text-sm font-medium">Nature:</label><select id="nature-select" class="w-full p-2 mt-1 border border-slate-300 rounded-md text-sm">${natureOptions}</select></div></div><div class="border-t pt-3"><h4 class="font-semibold text-md mb-2">Abilities</h4><p>${pokemon.abilities.join(', ')}</p></div></div></div><div class="p-4 border-t mt-auto grid grid-cols-2 gap-3"><button id="add-to-team-btn" class="w-full bg-blue-500 text-white py-2.5 px-4 rounded-lg font-semibold hover:bg-blue-600 transition shadow-md">Add to Team</button><button id="close-modal-btn" class="w-full bg-slate-200 text-slate-700 py-2.5 px-4 rounded-lg font-semibold hover:bg-slate-300 transition">Close</button></div>`;
+                const moveTable = (moves) => {
+                    if (!moves || moves.length === 0) return '<p class="text-slate-500 text-sm">No moves of this type learned.</p>';
+                    return `<table class="w-full text-left text-xs move-table">
+                                <thead><tr class="border-b"><th class="w-1/12">Lvl</th><th class="w-4/12">Name</th><th class="w-2/12">Type</th><th class="w-1/12">Pwr</th><th class="w-1/12">Acc</th><th class="w-1/12">PP</th></tr></thead>
+                                <tbody>${moves.map(m => `<tr><td class="font-bold">${m.level || '-'}</td><td class="capitalize font-semibold">${m.name}</td><td>${getTypeBadge(m.type)}</td><td>${m.power || '-'}</td><td>${m.accuracy || '-'}</td><td>${m.pp || '-'}</td></tr>`).join('')}</tbody>
+                            </table>`;
+                };
+
+                modalContent.innerHTML = `<div class="p-4 text-center border-b"><img src="${getSpriteUrl(pokemon.id)}" alt="${pokemon.name}" class="pokemon-sprite w-24 h-24 mx-auto -mt-16 bg-slate-100 border-4 border-white rounded-full shadow-lg"><h3 class="text-2xl font-bold mt-3 capitalize">${pokemon.name}</h3><div class="flex justify-center gap-2 my-2">${pokemon.types.map(t => getTypeBadge(t)).join('')}</div></div><div class="flex border-b text-sm"><button class="tab-btn flex-1 p-3 font-semibold text-slate-500 border-b-2 border-transparent active" data-tab="stats">Stats & Info</button><button class="tab-btn flex-1 p-3 font-semibold text-slate-500 border-b-2" data-tab="locations">Locations</button><button class="tab-btn flex-1 p-3 font-semibold text-slate-500 border-b-2" data-tab="moves">Moves</button></div><div class="overflow-y-auto custom-scrollbar flex-grow"><div id="tab-content-stats" class="p-4 tab-content space-y-3"><div><h4 class="font-semibold text-md mb-2">Base Stats</h4><div class="space-y-2">${statRows}</div><div class="mt-3"><label for="nature-select" class="text-sm font-medium">Nature:</label><select id="nature-select" class="w-full p-2 mt-1 border border-slate-300 rounded-md text-sm">${natureOptions}</select></div></div><div class="border-t pt-3"><h4 class="font-semibold text-md mb-2">Abilities</h4>${abilitiesHtml}</div></div><div id="tab-content-locations" class="p-4 tab-content hidden"><ul class="text-sm list-disc list-inside divide-y">${locationsList}</ul></div><div id="tab-content-moves" class="p-4 tab-content hidden space-y-4"><section>
+<h4 class="font-semibold text-md mb-2">Level-Up Moves</h4>${moveTable(pokemon.moves.level_up_moves)}</section><section><h4 class="font-semibold text-md mb-2">TM/HM Moves</h4>${moveTable(pokemon.moves.machine_moves)}</section></div></div><div class="p-4 border-t mt-auto grid grid-cols-2 gap-3"><button id="add-to-team-btn" class="w-full bg-blue-500 text-white py-2.5 px-4 rounded-lg font-semibold hover:bg-blue-600 transition shadow-md">Add to Team</button><button id="close-modal-btn" class="w-full bg-slate-200 text-slate-700 py-2.5 px-4 rounded-lg font-semibold hover:bg-slate-300 transition">Close</button></div>`;
                 modal.classList.remove('hidden');
                 
                 const natureSelect = modalContent.querySelector('#nature-select');
                 natureSelect.addEventListener('change', (e) => updateStatDisplay(pokemon.stats, e.target.value));
                 updateStatDisplay(pokemon.stats, natureSelect.value);
 
-                modal.querySelector('#add-to-team-btn').addEventListener('click', () => {
+                modalContent.querySelectorAll('.tab-btn').forEach(btn => btn.addEventListener('click', () => {
+                    modalContent.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active');
+                    modalContent.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+                    modalContent.querySelector(`#tab-content-${btn.dataset.tab}`).classList.remove('hidden');
+                }));
+                
+                modalContent.querySelector('#add-to-team-btn').addEventListener('click', () => {
                     const emptySlot = team.findIndex(s => s === null);
                     if (emptySlot !== -1) {
                         if (team.some(p => p && p.id === pokemon.id)) { showToast('Already on team!'); return; }
@@ -264,7 +297,7 @@
                     } else { showToast('Team is full!'); }
                 });
 
-                modal.querySelector('#close-modal-btn').addEventListener('click', () => modal.classList.add('hidden'));
+                modalContent.querySelector('#close-modal-btn').addEventListener('click', () => modal.classList.add('hidden'));
             }
 
             function updateStatDisplay(baseStats, natureName) {
@@ -281,10 +314,11 @@
             function resetUIForNewGeneration() {
                 team = Array(6).fill(null);
                 selectedTypes = [];
-                pokemonData = [];
+                pokemonData = []; abilitiesData = []; locationsData = [];
                 pokemonListContainer.innerHTML = '';
                 typeFilterContainer.innerHTML = '';
                 abilityFilter.innerHTML = '<option value="">All Abilities</option>';
+                document.getElementById('location-list').innerHTML = '';
                 sortSelect.value = 'id';
                 searchBar.value = '';
                 renderTeam();
@@ -297,7 +331,7 @@
                     const data = await fetchGenerationData(generationKey);
                     pokemonData = data.pokemon;
                     appTitle.textContent = data.title;
-                    setupFilters();
+                    setupFilters(data);
                     applyFiltersAndSort();
                 } catch (error) {
                     console.error("Failed to load Pokémon data:", error);
@@ -311,14 +345,13 @@
             generationSelect.addEventListener('change', (e) => initializeGeneration(e.target.value));
             document.getElementById('open-filter-btn').addEventListener('click', () => filterDrawer.classList.remove('hidden'));
             document.getElementById('close-filter-btn').addEventListener('click', () => filterDrawer.classList.add('hidden'));
-            [sortSelect, abilityFilter, searchBar].forEach(el => {
+            [sortSelect, abilityFilter, locationFilter, searchBar].forEach(el => {
                 el.addEventListener('input', applyFiltersAndSort);
                 el.addEventListener('change', applyFiltersAndSort);
             });
             document.getElementById('reset-filters-btn').addEventListener('click', () => {
-                searchBar.value = '';
-                sortSelect.value = 'id';
-                abilityFilter.value = '';
+                searchBar.value = ''; sortSelect.value = 'id';
+                abilityFilter.value = ''; locationFilter.value = '';
                 selectedTypes = [];
                 typeFilterContainer.querySelectorAll('.selected').forEach(b => b.classList.remove('selected'));
                 applyFiltersAndSort();

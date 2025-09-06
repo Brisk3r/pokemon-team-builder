@@ -8,7 +8,7 @@
 // An object mapping our selection keys to the pre-built JSON files
 const GENERATION_FILES = {
     kanto: 'leafgreen-data.json', // We assume you named the output file this
-    johto: 'crystal-data.json',  // When you're ready, you would generate and add these
+    johto: 'soulsilver-data.json',  // When you're ready, you would generate and add these
     hoenn: 'emerald-data.json',  // files as well.
 };
 

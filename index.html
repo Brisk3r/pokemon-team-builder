@@ -43,9 +43,8 @@
                     <label for="generation-select" class="sr-only">Select Generation</label>
                     <select id="generation-select" class="bg-red-700 border-2 border-red-800/50 text-white font-semibold text-sm rounded-lg focus:ring-2 focus:ring-white focus:outline-none p-2.5 transition hover:bg-red-800">
                         <option value="kanto">Gen I - Kanto (Leaf Green)</option>
-                        <option value="kanto">Gen 2 - Johto (Soul Silver)</option>
-                        <option value="hoenn">Gen 3 - Hoenn (Emerald)</option>
-                        <!-- Future generations will be added here -->
+                        <option value="johto">Gen II - Johto (Soul Silver)</option>
+                        <option value="hoenn">Gen III - Hoenn (Emerald)</option>
                     </select>
                 </div>
             </div>
@@ -266,7 +265,19 @@
                     const abilityInfo = abilitiesData.find(a => a.name === ability.name);
                     return `<div class="mb-2"><h5 class="font-semibold capitalize">${ability.name.replace(/-/g, ' ')} ${ability.is_hidden ? '(Hidden)' : ''}</h5><p class="text-sm text-slate-600">${abilityInfo ? abilityInfo.description : 'No description available.'}</p></div>`;
                 }).join('');
-                const locationsList = pokemon.locations.length > 0 ? pokemon.locations.map(loc => `<li class="py-1 capitalize">${loc.name} (${loc.method}) - ${loc.chance}% chance</li>`).join('') : '<li class="py-1 text-slate-500">Not found in the wild in this game.</li>';
+
+                const groupedLocations = (pokemon.locations || []).reduce((acc, loc) => {
+                    if (!acc[loc.name]) acc[loc.name] = {};
+                    acc[loc.name][loc.method] = (acc[loc.name][loc.method] || 0) + loc.chance;
+                    return acc;
+                }, {});
+
+                const locationsList = Object.keys(groupedLocations).length > 0 ? Object.entries(groupedLocations).map(([name, methods]) => {
+                    const methodDetails = Object.entries(methods).map(([method, chance]) => `<div class="ml-4 text-xs"><span class="capitalize">${method}:</span><span class="font-semibold"> ${chance}% chance</span></div>`).join('');
+                    return `<li class="py-2"><strong class="capitalize">${name}</strong>${methodDetails}</li>`;
+                }).join('') : '<li class="py-1 text-slate-500">Not found in the wild in this game.</li>';
+
+
                 const statRows = Object.entries(pokemon.stats).map(([key, value]) => `<div class="grid grid-cols-5 items-center gap-2 text-sm"><span class="font-semibold uppercase col-span-1">${key}</span><div class="bg-slate-200 rounded-full h-2.5 col-span-3"><div id="stat-bar-${key}" class="stat-bar h-2.5 rounded-full ${getStatColor(value)}" style="width: ${(value / 255) * 100}%"></div></div><span id="stat-value-${key}" class="text-right col-span-1 font-bold">${value}</span></div>`).join('');
                 
                 const moveTable = (moves) => {
@@ -277,7 +288,7 @@
                             </table>`;
                 };
 
-                modalContent.innerHTML = `<div class="p-4 text-center border-b"><img src="${getSpriteUrl(pokemon.id)}" alt="${pokemon.name}" class="pokemon-sprite w-24 h-24 mx-auto -mt-16 bg-slate-100 border-4 border-white rounded-full shadow-lg"><h3 class="text-2xl font-bold mt-3 capitalize">${pokemon.name}</h3><div class="flex justify-center gap-2 my-2">${pokemon.types.map(t => getTypeBadge(t)).join('')}</div></div><div class="flex border-b text-sm"><button class="tab-btn flex-1 p-3 font-semibold text-slate-500 border-b-2 border-transparent active" data-tab="stats">Stats & Info</button><button class="tab-btn flex-1 p-3 font-semibold text-slate-500 border-b-2" data-tab="locations">Locations</button><button class="tab-btn flex-1 p-3 font-semibold text-slate-500 border-b-2" data-tab="moves">Moves</button></div><div class="overflow-y-auto custom-scrollbar flex-grow"><div id="tab-content-stats" class="p-4 tab-content space-y-3"><div><h4 class="font-semibold text-md mb-2">Base Stats</h4><div class="space-y-2">${statRows}</div><div class="mt-3"><label for="nature-select" class="text-sm font-medium">Nature:</label><select id="nature-select" class="w-full p-2 mt-1 border border-slate-300 rounded-md text-sm">${natureOptions}</select></div></div><div class="border-t pt-3"><h4 class="font-semibold text-md mb-2">Abilities</h4>${abilitiesHtml}</div></div><div id="tab-content-locations" class="p-4 tab-content hidden"><ul class="text-sm list-disc list-inside divide-y">${locationsList}</ul></div><div id="tab-content-moves" class="p-4 tab-content hidden space-y-4"><section>
+                modalContent.innerHTML = `<div class="p-4 text-center border-b"><img src="${getSpriteUrl(pokemon.id)}" alt="${pokemon.name}" class="pokemon-sprite w-24 h-24 mx-auto -mt-16 bg-slate-100 border-4 border-white rounded-full shadow-lg"><h3 class="text-2xl font-bold mt-3 capitalize">${pokemon.name}</h3><div class="flex justify-center gap-2 my-2">${pokemon.types.map(t => getTypeBadge(t)).join('')}</div></div><div class="flex border-b text-sm"><button class="tab-btn flex-1 p-3 font-semibold text-slate-500 border-b-2 border-transparent active" data-tab="stats">Stats & Info</button><button class="tab-btn flex-1 p-3 font-semibold text-slate-500 border-b-2" data-tab="locations">Locations</button><button class="tab-btn flex-1 p-3 font-semibold text-slate-500 border-b-2" data-tab="moves">Moves</button></div><div class="overflow-y-auto custom-scrollbar flex-grow"><div id="tab-content-stats" class="p-4 tab-content space-y-3"><div><h4 class="font-semibold text-md mb-2">Base Stats</h4><div class="space-y-2">${statRows}</div><div class="mt-3"><label for="nature-select" class="text-sm font-medium">Nature:</label><select id="nature-select" class="w-full p-2 mt-1 border border-slate-300 rounded-md text-sm">${natureOptions}</select></div></div><div class="border-t pt-3"><h4 class="font-semibold text-md mb-2">Abilities</h4>${abilitiesHtml}</div></div><div id="tab-content-locations" class="p-4 tab-content hidden"><ul class="text-sm divide-y">${locationsList}</ul></div><div id="tab-content-moves" class="p-4 tab-content hidden space-y-4"><section>
 <h4 class="font-semibold text-md mb-2">Level-Up Moves</h4>${moveTable(pokemon.moves.level_up_moves)}</section><section><h4 class="font-semibold text-md mb-2">TM/HM Moves</h4>${moveTable(pokemon.moves.machine_moves)}</section></div></div><div class="p-4 border-t mt-auto grid grid-cols-2 gap-3"><button id="add-to-team-btn" class="w-full bg-blue-500 text-white py-2.5 px-4 rounded-lg font-semibold hover:bg-blue-600 transition shadow-md">Add to Team</button><button id="close-modal-btn" class="w-full bg-slate-200 text-slate-700 py-2.5 px-4 rounded-lg font-semibold hover:bg-slate-300 transition">Close</button></div>`;
                 modal.classList.remove('hidden');
                 

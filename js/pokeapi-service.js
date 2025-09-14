@@ -7,9 +7,9 @@
 
 // An object mapping our selection keys to the pre-built JSON files
 const GENERATION_FILES = {
-    kanto: 'leafgreen-data.json',
-    johto: 'soulsilver-data.json',  // Updated to match the new file name
-    hoenn: 'emerald-data.json',
+    kanto: 'data/leafgreen-data.json', // CORRECTED PATH
+    johto: 'data/soulsilver-data.json', // CORRECTED PATH
+    hoenn: 'data/emerald-data.json',   // CORRECTED PATH
 };
 
 /**
@@ -26,7 +26,7 @@ export async function fetchGenerationData(generationKey) {
     console.log(`Loading pre-built data from ${fileName}`);
     
     try {
-        const response = await fetch(fileName); // Fetch the local file
+        const response = await fetch(fileName); // Fetch the local file with the correct path
         if (!response.ok) {
             throw new Error(`Could not find the data file: ${fileName}`);
         }

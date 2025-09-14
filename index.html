@@ -185,82 +185,154 @@
             const getStatColor = (value) => { if (value < 60) return 'bg-red-500'; if (value < 90) return 'bg-yellow-500'; if (value < 120) return 'bg-green-500'; return 'bg-blue-500'; };
             const getPokemonById = (id) => pokemonData.find(p => p.id === id);
             
-            function evolvePokemon(teamIndex, nextEvoName) {
-                const nextEvolution = pokemonData.find(p => p.name === nextEvoName);
-                if (nextEvolution) {
-                    team[teamIndex] = nextEvolution;
-                    updateTeam();
-                }
-            }
+   
 
-            function renderTeam() {
-                // ... same as previous correct version
-            }
-            
-            function updateTeam() {
-                renderTeam();
-                saveTeamToLocalStorage(generationSelect.value);
-            }
-            
-            function saveTeamToLocalStorage(generationKey) {
-                // ... same as previous correct version
-            }
+            function evolvePokemon(teamIndex, nextEvoName) {
 
-            function loadTeamFromLocalStorage(generationKey) {
-                // ... same as previous correct version
-            }
+                const nextEvolution = pokemonData.find(p => p.name === nextEvoName);
 
-            function renderSynergyChart() {
-                 // ... same as previous correct version
-            }
-            
-            function applyFiltersAndSort() {
-                // ... same as previous correct version
-            }
+                if (nextEvolution) {
 
-            function renderPokemonList(list) {
-                 // ... same as previous correct version
-            }
-            
-            function setupFilters(data) {
-                // ... same as previous correct version
-            }
+                    team[teamIndex] = nextEvolution;
 
-            function showPokemonModal(pokemon) {
-                 // ... same as previous correct version
-            }
+                    updateTeam();
 
-            function updateStatDisplay(baseStats, natureName) {
-                 // ... same as previous correct version
-            }
+                }
 
-            function resetUIForNewGeneration() {
-                // ... same as previous correct version
-            }
+            }
 
-            async function initializeGeneration(generationKey) {
-                // ... same as previous correct version
-            }
-            
-            // --- Event Listeners ---
-            generationSelect.addEventListener('change', (e) => initializeGeneration(e.target.value));
-            document.getElementById('open-filter-btn').addEventListener('click', () => filterDrawer.classList.remove('hidden'));
-            document.getElementById('close-filter-btn').addEventListener('click', () => filterDrawer.classList.add('hidden'));
-            [sortSelect, abilityFilter, locationFilter, searchBar].forEach(el => {
-                el.addEventListener('input', applyFiltersAndSort);
-                el.addEventListener('change', applyFiltersAndSort);
-            });
-            document.getElementById('reset-filters-btn').addEventListener('click', () => {
-                searchBar.value = ''; sortSelect.value = 'id';
-                abilityFilter.value = ''; locationFilter.value = '';
-                selectedTypes = [];
-                typeFilterContainer.querySelectorAll('.selected').forEach(b => b.classList.remove('selected'));
-                applyFiltersAndSort();
-            });
-            filterDrawer.addEventListener('click', (e) => { if(e.target === filterDrawer) filterDrawer.classList.add('hidden'); });
 
-            // --- Initial Load ---
-            initializeGeneration('kanto');
+
+            function renderTeam() {
+
+                // ... same as previous correct version
+
+            }
+
+            
+
+            function updateTeam() {
+
+                renderTeam();
+
+                saveTeamToLocalStorage(generationSelect.value);
+
+            }
+
+            
+
+            function saveTeamToLocalStorage(generationKey) {
+
+                // ... same as previous correct version
+
+            }
+
+
+
+            function loadTeamFromLocalStorage(generationKey) {
+
+                // ... same as previous correct version
+
+            }
+
+
+
+            function renderSynergyChart() {
+
+                 // ... same as previous correct version
+
+            }
+
+            
+
+            function applyFiltersAndSort() {
+
+                // ... same as previous correct version
+
+            }
+
+
+
+            function renderPokemonList(list) {
+
+                 // ... same as previous correct version
+
+            }
+
+            
+
+            function setupFilters(data) {
+
+                // ... same as previous correct version
+
+            }
+
+
+
+            function showPokemonModal(pokemon) {
+
+                 // ... same as previous correct version
+
+            }
+
+
+
+            function updateStatDisplay(baseStats, natureName) {
+
+                 // ... same as previous correct version
+
+            }
+
+
+
+            function resetUIForNewGeneration() {
+
+                // ... same as previous correct version
+
+            }
+
+
+
+            async function initializeGeneration(generationKey) {
+
+                // ... same as previous correct version
+
+            }
+
+            
+
+            // --- Event Listeners ---
+
+            generationSelect.addEventListener('change', (e) => initializeGeneration(e.target.value));
+
+            document.getElementById('open-filter-btn').addEventListener('click', () => filterDrawer.classList.remove('hidden'));
+
+            document.getElementById('close-filter-btn').addEventListener('click', () => filterDrawer.classList.add('hidden'));
+
+            [sortSelect, abilityFilter, locationFilter, searchBar].forEach(el => {
+
+                el.addEventListener('input', applyFiltersAndSort);
+
+                el.addEventListener('change', applyFiltersAndSort);
+
+            });
+
+            document.getElementById('reset-filters-btn').addEventListener('click', () => {
+
+                searchBar.value = ''; sortSelect.value = 'id';
+
+                abilityFilter.value = ''; locationFilter.value = '';
+
+                selectedTypes = [];
+
+                typeFilterContainer.querySelectorAll('.selected').forEach(b => b.classList.remove('selected'));
+
+                applyFiltersAndSort();
+
+            });
+
+            filterDrawer.addEventListener('click', (e) => { if(e.target === filterDrawer) filterDrawer.classList.add('hidden'); });
+
         });
     </script>
 </body>

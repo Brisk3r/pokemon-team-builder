@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fabulous Figs - Nutrition Assignment</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Open Sans', sans-serif;
+            background-color: #ffffff;
+        }
+        h1, h2, h3, .site-title {
+            font-family: 'Roboto', sans-serif;
+        }
+        /* Custom animation for smooth page transitions */
+        .fade-in {
+            animation: fadeIn 0.4s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        /* Google Sites style hero banner */
+        .hero-banner {
+            position: relative;
+            height: 40vh;
+            min-height: 250px;
+            max-height: 400px;
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .hero-overlay {
+            position: absolute;
+            inset: 0;
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+        .hero-title {
+            position: relative;
+            color: white;
+            font-size: 2.5rem;
+            font-weight: 400;
+            letter-spacing: 1px;
+            text-align: center;
+            padding: 0 20px;
+        }
+        @media (min-width: 768px) {
+            .hero-title { font-size: 3.5rem; }
+        }
+    </style>
+</head>
+<body class="text-gray-800 flex flex-col min-h-screen">
+
+    <!-- Navigation (Google Sites Style) -->
+    <nav class="bg-white border-b border-gray-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Site Title -->
+                <div class="flex-shrink-0 flex items-center">
+                    <span class="site-title text-xl text-gray-700 tracking-wide">Fabulous Figs</span>
+                </div>
+                
+                <!-- Desktop Nav -->
+                <div class="hidden md:flex space-x-1">
+                    <button data-tab="home" class="nav-btn-desktop px-4 py-2 text-sm text-gray-900 border-b-2 border-blue-500 font-medium transition-colors">Home</button>
+                    <button data-tab="nutrition" class="nav-btn-desktop px-4 py-2 text-sm text-gray-500 border-b-2 border-transparent hover:text-gray-900 hover:border-gray-300 transition-colors">Nutrition</button>
+                    <button data-tab="eating" class="nav-btn-desktop px-4 py-2 text-sm text-gray-500 border-b-2 border-transparent hover:text-gray-900 hover:border-gray-300 transition-colors">Eating Figs</button>
+                    <button data-tab="recipes" class="nav-btn-desktop px-4 py-2 text-sm text-gray-500 border-b-2 border-transparent hover:text-gray-900 hover:border-gray-300 transition-colors">Cooking</button>
+                    <button data-tab="author" class="nav-btn-desktop px-4 py-2 text-sm text-gray-500 border-b-2 border-transparent hover:text-gray-900 hover:border-gray-300 transition-colors">Author & Ref</button>
+                </div>
+
+                <!-- Mobile Menu Button -->
+                <div class="md:hidden flex items-center">
+                    <button id="mobile-menu-btn" class="text-gray-500 hover:text-gray-900 focus:outline-none p-2">
+                        <svg id="menu-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                        <svg id="close-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Nav Dropdown -->
+        <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-gray-100 shadow-lg absolute w-full left-0">
+            <div class="px-2 pt-2 pb-3 space-y-1">
+                <button data-tab="home" class="nav-btn-mobile block w-full text-left px-3 py-2 text-base font-medium text-blue-600 bg-blue-50">Home</button>
+                <button data-tab="nutrition" class="nav-btn-mobile block w-full text-left px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900">Nutrition</button>
+                <button data-tab="eating" class="nav-btn-mobile block w-full text-left px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900">Eating Figs</button>
+                <button data-tab="recipes" class="nav-btn-mobile block w-full text-left px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900">Cooking</button>
+                <button data-tab="author" class="nav-btn-mobile block w-full text-left px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900">Author & Ref</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow">
+        
+        <!-- Home Section -->
+        <div id="home" class="tab-content active fade-in">
+            <!-- Hero Banner -->
+            <div class="hero-banner" style="background-image: url('https://images.stockfreeimages.com/thumb/15mk05sz09.jpg');">
+                <div class="hero-overlay"></div>
+                <h1 class="hero-title">Introduction</h1>
+            </div>
+
+            <!-- Content Band -->
+            <div class="max-w-5xl mx-auto px-6 py-12 space-y-10">
+                <section>
+                    <h2 class="text-2xl font-normal text-gray-800 mb-4 border-b pb-2">Purpose of this Website</h2>
+                    <p class="text-gray-600 leading-relaxed">
+                        The purpose of this website is to fulfil my school assignment requirements while exploring the incredible benefits of whole foods. I intend to showcase the nutritional value of a specific fruit—the fig—and provide practical, healthy ways to incorporate it into a balanced diet to support overall wellbeing.
+                    </p>
+                </section>
+
+                <section>
+                    <h2 class="text-2xl font-normal text-gray-800 mb-4 border-b pb-2">Why Eat a Wide Range of Fruits and Vegetables?</h2>
+                    <p class="text-gray-600 leading-relaxed">
+                        Including a colourful, wide variety of fruits and vegetables in our diet is crucial for maintaining good health. Different plant foods provide different combinations of essential vitamins, minerals, dietary fibre, and antioxidants. Eating a diverse range helps protect the body against chronic diseases, supports a strong immune system, and ensures we get all the micro-nutrients needed to achieve our wellness goals.
+                    </p>
+                </section>
+
+                <!-- Highlight Box (Google Sites style emphasis) -->
+                <section class="bg-[#f8f9fa] p-8 border-l-4 border-blue-500">
+                    <h3 class="text-xl font-normal text-gray-800 mb-3">Recommended Daily Intake</h3>
+                    <p class="text-gray-700 mb-3">
+                        According to the Australian Dietary Guidelines, to support healthy growth and development, the recommended daily intake for children and adolescents (roughly ages 9-18) is:
+                    </p>
+                    <ul class="list-disc list-inside text-gray-700 space-y-2 ml-4">
+                        <li><strong>Fruit:</strong> 2 serves per day</li>
+                        <li><strong>Vegetables:</strong> 5 to 5.5 serves per day</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2 class="text-2xl font-normal text-gray-800 mb-4 border-b pb-2">The Importance of Breakfast</h2>
+                    <p class="text-gray-600 leading-relaxed">
+                        Breakfast is often considered the most important meal of the day because it breaks the overnight fasting period. It replenishes your supply of glucose to boost energy levels and alertness, while also providing other essential nutrients required for good health. A healthy breakfast improves concentration, performance at school, and sets a positive foundation for making healthy choices throughout the rest of the day.
+                    </p>
+                </section>
+            </div>
+        </div>
+
+        <!-- Nutrition Section -->
+        <div id="nutrition" class="tab-content fade-in">
+            <div class="hero-banner" style="background-image: url('https://thumbs.dreamstime.com/z/figs-fresh-wooden-board-one-cut-half-33725703.jpg?ct=jpeg'); background-position: center 30%;">
+                <div class="hero-overlay"></div>
+                <h1 class="hero-title">The Nutrition of a Fig</h1>
+            </div>
+
+            <div class="max-w-5xl mx-auto px-6 py-12 space-y-12">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                    <div class="space-y-8">
+                        <section>
+                            <h2 class="text-2xl font-normal text-gray-800 mb-3 border-b pb-2">Identify the Fruit</h2>
+                            <p class="text-gray-600 leading-relaxed">
+                                The focus food for this assignment is the <strong>Fig</strong> (scientific name: <em>Ficus carica</em>). Known for its unique, sweet taste and soft, chewy texture, it is a fantastic, versatile fruit.
+                            </p>
+                        </section>
+
+                        <section>
+                            <h2 class="text-2xl font-normal text-gray-800 mb-3 border-b pb-2">Health Benefits</h2>
+                            <p class="text-gray-600 leading-relaxed">
+                                Figs are an excellent source of dietary fibre, which promotes a healthy digestive system and helps keep you feeling fuller for longer. They are rich in antioxidants, particularly in their skin, which help fight free radicals in the body. Additionally, their potassium content can assist in maintaining healthy blood pressure levels.
+                            </p>
+                        </section>
+                    </div>
+
+                    <div>
+                        <img src="https://thumbs.dreamstime.com/z/figs-fresh-wooden-board-one-cut-half-33725703.jpg?ct=jpeg" alt="Fresh halved figs" class="w-full h-auto shadow-sm border border-gray-200" />
+                    </div>
+                </div>
+
+                <hr class="border-gray-200">
+
+                <section>
+                    <h2 class="text-2xl font-normal text-center text-gray-800 mb-8">Nutritional Value of the Whole Food</h2>
+                    <div class="max-w-3xl mx-auto bg-white border border-gray-200 p-8 shadow-sm">
+                        <ul class="space-y-6">
+                            <li class="flex flex-col sm:flex-row sm:items-start border-b border-gray-100 pb-4 last:border-0 last:pb-0">
+                                <span class="font-bold text-gray-800 w-48 shrink-0">Carbohydrates:</span>
+                                <span class="text-gray-600">Figs are primarily made of carbohydrates, predominantly in the form of natural sugars (glucose and fructose) which provide excellent, readily available energy. They are also rich in complex carbohydrates in the form of dietary fibre.</span>
+                            </li>
+                            <li class="flex flex-col sm:flex-row sm:items-start border-b border-gray-100 pb-4 last:border-0 last:pb-0">
+                                <span class="font-bold text-gray-800 w-48 shrink-0">Protein:</span>
+                                <span class="text-gray-600">They contain a very small amount of protein, which is typical for most fruits. They should be paired with nuts, dairy, or meats for a protein-complete meal.</span>
+                            </li>
+                            <li class="flex flex-col sm:flex-row sm:items-start border-b border-gray-100 pb-4 last:border-0 last:pb-0">
+                                <span class="font-bold text-gray-800 w-48 shrink-0">Lipids (Fats):</span>
+                                <span class="text-gray-600">Fresh figs are naturally virtually fat-free, making them a very lean addition to the diet.</span>
+                            </li>
+                            <li class="flex flex-col sm:flex-row sm:items-start border-b border-gray-100 pb-4 last:border-0 last:pb-0">
+                                <span class="font-bold text-gray-800 w-48 shrink-0">Vitamins & Minerals:</span>
+                                <span class="text-gray-600">Packed with essential micronutrients including Vitamin K (important for blood clotting), Vitamin B6 (helps the brain and nervous system), potassium, calcium, and magnesium.</span>
+                            </li>
+                            <li class="flex flex-col sm:flex-row sm:items-start">
+                                <span class="font-bold text-gray-800 w-48 shrink-0">Water:</span>
+                                <span class="text-gray-600">Fresh figs have a high water content (roughly 80%), which helps with daily hydration and makes them a refreshing snack.</span>
+                            </li>
+                        </ul>
+                    </div>
+                </section>
+            </div>
+        </div>
+
+        <!-- Eating Section -->
+        <div id="eating" class="tab-content fade-in">
+            <div class="hero-banner" style="background-image: url('https://images.stockfreeimages.com/thumb/0mqik3bint.jpg?w=576');">
+                <div class="hero-overlay"></div>
+                <h1 class="hero-title">Eating Figs</h1>
+            </div>
+
+            <div class="max-w-5xl mx-auto px-6 py-12 space-y-12">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
+                    <div>
+                        <img src="https://images.stockfreeimages.com/thumb/0mqik3bint.jpg?w=576" alt="Varieties of figs" class="w-full h-auto shadow-sm border border-gray-200" />
+                    </div>
+                    
+                    <div class="space-y-8">
+                        <section>
+                            <h2 class="text-2xl font-normal text-gray-800 mb-4 border-b pb-2">Varieties Available</h2>
+                            <p class="text-gray-600 mb-3">There are several common varieties of figs you can find in stores or at local markets:</p>
+                            <ul class="list-disc list-inside text-gray-600 space-y-2 ml-2">
+                                <li><strong>Black Genoa:</strong> Large size with dark purple skin and sweet red flesh.</li>
+                                <li><strong>Brown Turkey:</strong> Brownish-purple skin with a milder, less sweet flavour.</li>
+                                <li><strong>White Adriatic:</strong> Pale green skin with a very sweet, strawberry-coloured centre.</li>
+                            </ul>
+                        </section>
+
+                        <section>
+                            <h2 class="text-2xl font-normal text-gray-800 mb-4 border-b pb-2">How to Prepare</h2>
+                            <p class="text-gray-600 leading-relaxed">
+                                Figs are highly versatile and easy to prepare. First, <strong>wash</strong> them gently under cold water, as they are very delicate. You can eat them whole—the skin is completely edible! If you prefer, you can <strong>peel</strong> them. They can be <strong>sliced</strong> to top dishes, lightly <strong>baked</strong> to caramelise their natural sugars, or even <strong>grilled</strong> to add a smoky flavour.
+                            </p>
+                        </section>
+                    </div>
+                </div>
+
+                <section class="bg-[#f8f9fa] p-8 border border-gray-200 mt-8">
+                    <h2 class="text-2xl font-normal text-gray-800 mb-6 text-center">Incorporating Figs into Your Diet</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <div class="text-center">
+                            <h3 class="font-bold text-gray-800 text-lg mb-2">Breakfast</h3>
+                            <p class="text-gray-600">Slice fresh figs over your morning porridge, yogurt, or cereal for natural sweetness and extra fibre.</p>
+                        </div>
+                        <div class="text-center">
+                            <h3 class="font-bold text-gray-800 text-lg mb-2">Lunch</h3>
+                            <p class="text-gray-600">Toss quartered figs into a leafy green salad with a light vinaigrette and some feta or goat cheese.</p>
+                        </div>
+                        <div class="text-center">
+                            <h3 class="font-bold text-gray-800 text-lg mb-2">Snacks & Baking</h3>
+                            <p class="text-gray-600">Eat them whole as a quick, energising snack, or bake them into healthy homemade muffins and breads.</p>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+
+        <!-- Recipes Section -->
+        <div id="recipes" class="tab-content fade-in">
+            <div class="hero-banner" style="background-image: url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRNKdsqWwbf46jryPzyvN8SiNUxhT-330VpF6awz-_V0saesmCmTCMxFlE&s=10');">
+                <div class="hero-overlay"></div>
+                <h1 class="hero-title">Cooking with Figs</h1>
+            </div>
+
+            <div class="max-w-5xl mx-auto px-6 py-12 space-y-16">
+                <div class="text-center max-w-2xl mx-auto">
+                    <p class="text-gray-600 text-lg">Pages 3, 4 and 5 of the assignment. Three healthy recipes featuring the fig as the 'hero' ingredient.</p>
+                </div>
+
+                <!-- Recipe 1 -->
+                <section class="border-t border-gray-200 pt-10">
+                    <h2 class="text-3xl font-normal text-gray-800 mb-2">Warm Fig & Honey Oatmeal</h2>
+                    <p class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-6">Breakfast</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                        <div class="order-2 md:order-1 space-y-6">
+                            <div>
+                                <h3 class="font-bold text-gray-800 text-lg mb-2">Ingredients (Serves 1):</h3>
+                                <ul class="list-disc list-inside text-gray-600 space-y-1 ml-2">
+                                    <li>1/2 cup rolled oats</li>
+                                    <li>1 cup milk (or almond milk)</li>
+                                    <li>2 fresh figs, chopped</li>
+                                    <li>1 tsp honey</li>
+                                    <li>1 tbsp crushed walnuts</li>
+                                    <li>Pinch of cinnamon</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-gray-800 text-lg mb-2">Method:</h3>
+                                <ol class="list-decimal list-inside text-gray-600 space-y-2 ml-2">
+                                    <li>Combine oats and milk in a saucepan over medium heat.</li>
+                                    <li>Simmer for 5-7 minutes until creamy, stirring occasionally.</li>
+                                    <li>Stir in half the chopped figs and the cinnamon.</li>
+                                    <li>Pour into a bowl, top with the remaining fresh figs, walnuts, and a drizzle of honey.</li>
+                                </ol>
+                            </div>
+                            <div class="bg-[#f8f9fa] p-4 border-l-4 border-gray-300 italic text-gray-700">
+                                <strong>Why I chose this:</strong> I chose this for breakfast because oats provide long-lasting, slow-release energy, while the figs add a wonderful natural sweetness and an extra boost of digestive fibre to start the day right for school.
+                            </div>
+                        </div>
+                        <div class="order-1 md:order-2">
+                            <img src="https://images.stockfreeimages.com/thumb/0rbbizo261.jpg?w=992" alt="Oatmeal topped with fresh figs" class="w-full h-auto shadow-sm border border-gray-200" />
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Recipe 2 -->
+                <section class="border-t border-gray-200 pt-10">
+                    <h2 class="text-3xl font-normal text-gray-800 mb-2">Fig, Rocket & Feta Salad</h2>
+                    <p class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-6">Lunch</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                        <div>
+                            <img src="https://images.stockfreeimages.com/thumb/02u1a4hejd.jpg?w=768" alt="Healthy salad with fruit and cheese" class="w-full h-auto shadow-sm border border-gray-200" />
+                        </div>
+                        <div class="space-y-6">
+                            <div>
+                                <h3 class="font-bold text-gray-800 text-lg mb-2">Ingredients (Serves 2):</h3>
+                                <ul class="list-disc list-inside text-gray-600 space-y-1 ml-2">
+                                    <li>3 cups fresh rocket (arugula) leaves</li>
+                                    <li>4 fresh figs, quartered</li>
+                                    <li>50g reduced-fat feta cheese, crumbled</li>
+                                    <li>1/4 cup sliced almonds, toasted</li>
+                                    <li>1 tbsp olive oil</li>
+                                    <li>1 tbsp balsamic vinegar</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-gray-800 text-lg mb-2">Method:</h3>
+                                <ol class="list-decimal list-inside text-gray-600 space-y-2 ml-2">
+                                    <li>Wash and dry the rocket leaves, placing them in a large serving bowl.</li>
+                                    <li>Gently scatter the quartered figs and crumbled feta over the leaves.</li>
+                                    <li>Sprinkle the toasted almonds on top.</li>
+                                    <li>In a small jar, shake together the olive oil and balsamic vinegar, then dress the salad just before serving.</li>
+                                </ol>
+                            </div>
+                            <div class="bg-[#f8f9fa] p-4 border-l-4 border-gray-300 italic text-gray-700">
+                                <strong>Why I chose this:</strong> I chose this as a lunch recipe because it is incredibly quick to prepare, light on the stomach, and provides a beautiful contrast between the sweet, soft figs and the peppery rocket. It won't leave you feeling sluggish in the afternoon.
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Recipe 3 -->
+                <section class="border-t border-gray-200 pt-10">
+                    <h2 class="text-3xl font-normal text-gray-800 mb-2">Balsamic Baked Chicken with Roasted Figs</h2>
+                    <p class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-6">Dinner</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                        <div class="order-2 md:order-1 space-y-6">
+                            <div>
+                                <h3 class="font-bold text-gray-800 text-lg mb-2">Ingredients (Serves 4):</h3>
+                                <ul class="list-disc list-inside text-gray-600 space-y-1 ml-2">
+                                    <li>4 lean chicken breasts</li>
+                                    <li>8 fresh figs, halved</li>
+                                    <li>2 sprigs fresh rosemary</li>
+                                    <li>2 tbsp balsamic glaze</li>
+                                    <li>1 tbsp olive oil</li>
+                                    <li>Salt and pepper to taste</li>
+                                    <li>Steamed green beans (to serve)</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-gray-800 text-lg mb-2">Method:</h3>
+                                <ol class="list-decimal list-inside text-gray-600 space-y-2 ml-2">
+                                    <li>Preheat oven to 200°C. Place chicken breasts in a baking dish.</li>
+                                    <li>Rub chicken with olive oil, salt, pepper, and rosemary leaves.</li>
+                                    <li>Arrange the halved figs around the chicken in the dish.</li>
+                                    <li>Drizzle everything with balsamic glaze.</li>
+                                    <li>Bake for 25-30 minutes until chicken is cooked through and figs are soft and caramelised. Serve with steamed green beans.</li>
+                                </ol>
+                            </div>
+                            <div class="bg-[#f8f9fa] p-4 border-l-4 border-gray-300 italic text-gray-700">
+                                <strong>Why I chose this:</strong> Dinner needs to be protein-rich to help muscle recovery after a busy day or playing sports. Baking the figs makes them act almost like a sweet, rich sauce for the lean chicken breast. It feels like a premium, wholesome meal that is easy to cook for the whole family.
+                            </div>
+                        </div>
+                        <div class="order-1 md:order-2">
+                            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRNKdsqWwbf46jryPzyvN8SiNUxhT-330VpF6awz-_V0saesmCmTCMxFlE&s=10" alt="Roasted chicken dinner" class="w-full h-auto shadow-sm border border-gray-200" />
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+
+        <!-- Author Section -->
+        <div id="author" class="tab-content fade-in">
+            <div class="hero-banner" style="background-image: url('https://images.stockfreeimages.com/thumb/02u1a4hejd.jpg?w=768');">
+                <div class="hero-overlay" style="background-color: rgba(0,0,0,0.6);"></div>
+                <h1 class="hero-title">Author & Bibliography</h1>
+            </div>
+
+            <div class="max-w-4xl mx-auto px-6 py-16 space-y-16">
+                
+                <section class="flex flex-col md:flex-row gap-10 items-start">
+                    <div class="md:w-1/3 flex flex-col items-center">
+                        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRn6CieGrki0If0jtXqzDP38kSvMkAKrMgmYotw3dWSFQ&s" alt="Josiah Gibian" class="w-48 h-48 rounded-full object-cover shadow-md border-4 border-white mb-4" />
+                        <h2 class="text-2xl font-normal text-gray-800">Josiah Gibian</h2>
+                        <p class="text-gray-500 uppercase tracking-widest text-sm mt-1">Student</p>
+                    </div>
+                    
+                    <div class="md:w-2/3 space-y-4">
+                        <h3 class="text-xl font-normal text-gray-800 border-b pb-2 mb-4">About the Author</h3>
+                        <p class="text-gray-600 leading-relaxed">
+                            Hi! I'm Josiah Gibian. I built this website as part of my school assignment to explore how the whole foods we eat fuel our daily lives and to highlight the fantastic nutritional benefits of figs.
+                        </p>
+                        <p class="text-gray-600 leading-relaxed">
+                            My interests surrounding food involve learning how to cook healthy, practical meals that not only taste great but also provide the essential energy needed for school, sports, and staying active. I enjoy discovering how simple, fresh ingredients—like the fruits and vegetables outlined on this site—can be turned into delicious dishes. 
+                        </p>
+                        <p class="text-gray-600 leading-relaxed">
+                            I'm passionate about making healthy eating an enjoyable habit. I believe that understanding the nutritional value of what we eat, from breakfast through to dinner, is one of the best ways to take care of our physical and mental wellbeing!
+                        </p>
+                    </div>
+                </section>
+
+                <hr class="border-gray-200">
+
+                <section>
+                    <h3 class="text-xl font-normal text-gray-800 border-b pb-2 mb-6">Reference List</h3>
+                    <p class="text-gray-600 mb-4">The following websites and resources were used to gather nutritional information and dietary guidelines for this assignment:</p>
+                    <ul class="list-disc list-inside space-y-3 text-gray-700 ml-2">
+                        <li>
+                            <strong>Eat For Health (Australian Dietary Guidelines):</strong> 
+                            <a href="https://www.eatforhealth.gov.au" target="_blank" rel="noreferrer" class="text-blue-600 hover:underline ml-1">www.eatforhealth.gov.au</a>
+                        </li>
+                        <li>
+                            <strong>Nutrition Australia:</strong> Fact sheets on fruit intake and the importance of breakfast. 
+                            <a href="https://nutritionaustralia.org" target="_blank" rel="noreferrer" class="text-blue-600 hover:underline ml-1">nutritionaustralia.org</a>
+                        </li>
+                        <li>
+                            <strong>USDA FoodData Central:</strong> Nutritional profiles for Ficus carica (raw figs). 
+                            <a href="https://fdc.nal.usda.gov" target="_blank" rel="noreferrer" class="text-blue-600 hover:underline ml-1">fdc.nal.usda.gov</a>
+                        </li>
+                        <li>
+                            <strong>Better Health Channel:</strong> Information on dietary fibre and health benefits of fresh fruits.
+                            <a href="https://www.betterhealth.vic.gov.au" target="_blank" rel="noreferrer" class="text-blue-600 hover:underline ml-1">www.betterhealth.vic.gov.au</a>
+                        </li>
+                    </ul>
+                </section>
+                
+                <div class="pt-8 text-center text-sm text-gray-400 italic">
+                    *Assignment to be submitted via Google Classroom prior to 3:00pm as requested.*
+                </div>
+            </div>
+        </div>
+
+    </main>
+    
+    <!-- Footer -->
+    <footer class="bg-[#f8f9fa] border-t border-gray-200 text-gray-500 py-8 text-center mt-auto">
+        <p class="text-sm tracking-wide">© 2026 Josiah Gibian. School Assignment Submission.</p>
+    </footer>
+
+    <!-- Vanilla Javascript for Navigation -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const tabs = ['home', 'nutrition', 'eating', 'recipes', 'author'];
+            const navButtonsDesktop = document.querySelectorAll('.nav-btn-desktop');
+            const navButtonsMobile = document.querySelectorAll('.nav-btn-mobile');
+            const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+            const mobileMenu = document.getElementById('mobile-menu');
+            const menuIcon = document.getElementById('menu-icon');
+            const closeIcon = document.getElementById('close-icon');
+
+            function switchTab(targetTab) {
+                // Hide all sections
+                tabs.forEach(tab => {
+                    document.getElementById(tab).classList.remove('active');
+                });
+                
+                // Show target section
+                document.getElementById(targetTab).classList.add('active');
+
+                // Update desktop button styling (Google Sites Active state: text-gray-900 and border-blue-500)
+                navButtonsDesktop.forEach(btn => {
+                    if (btn.dataset.tab === targetTab) {
+                        btn.classList.add('text-gray-900', 'border-blue-500');
+                        btn.classList.remove('text-gray-500', 'border-transparent');
+                    } else {
+                        btn.classList.remove('text-gray-900', 'border-blue-500');
+                        btn.classList.add('text-gray-500', 'border-transparent');
+                    }
+                });
+
+                // Update mobile button styling
+                navButtonsMobile.forEach(btn => {
+                    if (btn.dataset.tab === targetTab) {
+                        btn.classList.add('text-blue-600', 'bg-blue-50');
+                        btn.classList.remove('text-gray-700', 'hover:bg-gray-50');
+                    } else {
+                        btn.classList.remove('text-blue-600', 'bg-blue-50');
+                        btn.classList.add('text-gray-700', 'hover:bg-gray-50');
+                    }
+                });
+
+                // Close mobile menu
+                mobileMenu.classList.add('hidden');
+                menuIcon.classList.remove('hidden');
+                closeIcon.classList.add('hidden');
+                
+                // Scroll to top when changing tabs
+                window.scrollTo(0, 0);
+            }
+
+            // Attach click events
+            navButtonsDesktop.forEach(btn => {
+                btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+            });
+
+            navButtonsMobile.forEach(btn => {
+                btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+            });
+
+            // Mobile menu toggle
+            mobileMenuBtn.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+                menuIcon.classList.toggle('hidden');
+                closeIcon.classList.toggle('hidden');
+            });
+
+            // Initial load
+            switchTab('home');
+        });
+    </script>
+</body>
+</html>
